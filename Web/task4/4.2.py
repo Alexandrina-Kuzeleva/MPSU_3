@@ -41,7 +41,7 @@ def retry(times=3, exceptions=(Exception,), delay=0.0):
 print("Пример 1")
 i = 0
 
-@retry(times=4, exceptions=(ValueError,), delay=0.1)
+@retry(times=4, exceptions=(ValueError,), delay=2)
 def flaky():
     global i
     i += 1
@@ -54,7 +54,7 @@ print(f"Результат: {result}\n")
 
 print("Пример 2")
 
-@retry(times=3, exceptions=(RuntimeError,), delay=0.2)
+@retry(times=3, exceptions=(RuntimeError,), delay=3)
 def always_fails():
     raise RuntimeError("Unavailable")
 
