@@ -1,0 +1,34 @@
+root = true
+
+[*.{cs,csx}]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Более строгие настройки для C#
+csharp_max_line_length = 80
+csharp_using_directive_placement = inside_namespace:suggestion
+
+# Стиль объявлений
+csharp_style_namespace_declarations = block_scoped:silent
+
+# Квалификация
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+
+# Принудительное форматирование
+csharp_preserve_single_line_statements = false:warning
+csharp_preserve_single_line_blocks = false:warning
+
+# Для длинных строк
+csharp_prefer_break_chain = true:warning
+csharp_style_prefer_switch_expression = true:suggestion
+
+# Новые правила для лучшего форматирования
+csharp_style_inlined_variable_declaration = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_prefer_local_over_anonymous_function = true:suggestion
