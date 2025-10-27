@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS flights (
     id serial PRIMARY KEY,
     flight_code text NOT NULL CHECK(
         length(flight_code) = 6 
-        AND flight_code LIKE 'SU%'),
+        AND flight_code LIKE 'SU%'
+    ),
     duration int NOT NULL CHECK(duration >= 30 AND duration <= 600),
     price int NOT NULL CHECK(price > 100)
 );
