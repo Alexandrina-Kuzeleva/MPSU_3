@@ -4,6 +4,10 @@
 bin/
 obj/
 
+# Файлы журналов и временные файлы
+*.pytest_cache
+__pycache__/
+
 # Файлы настроек IDE
 .vs/
 .vscode/

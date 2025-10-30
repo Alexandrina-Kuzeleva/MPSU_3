@@ -4,7 +4,9 @@ namespace Task6.EnumApproach
 {
     public static class TaxCalculatorEnum
     {
-        public static int CalculateTax(ProductCategory category, int price, TaxContext context)
+        public static int CalculateTax(
+            ProductCategory category, int price, TaxContext context
+        )
         {
             int baseTax = category switch
             {

@@ -7,7 +7,7 @@ namespace Task6.OopApproach
         public Electronics() : base(TaxRates.Electronics) { }
         public override int GetTax(TaxContext context, int price)
         {
-            int tax = ApplyModifiers(baseTax, context);
+            int tax = ApplyModifiers(BaseTax, context);
             return price * tax / 100;
         }
     }

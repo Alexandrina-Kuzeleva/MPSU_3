@@ -4,12 +4,15 @@ namespace Task6.OopApproach
 {
     public abstract class Product
     {
-        protected readonly int baseTax;
-        protected Product(int baseTax) => this.baseTax = baseTax;
+        private readonly int _baseTax;
+        
+        public int BaseTax => _baseTax;
+        
+        protected Product(int baseTax) => _baseTax = baseTax;
 
         public virtual int GetTax(TaxContext context, int price)
         {
-            return price * baseTax / 100;
+            return price * _baseTax / 100;
         }
 
         protected static int ApplyModifiers(int tax, TaxContext ctx)

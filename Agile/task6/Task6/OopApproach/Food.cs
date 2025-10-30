@@ -7,7 +7,7 @@ namespace Task6.OopApproach
         public Food() : base(TaxRates.Food) { }
         public override int GetTax(TaxContext context, int price)
         {
-            int tax = ApplyModifiers(baseTax, context);
+            int tax = ApplyModifiers(BaseTax, context);
             return price * tax / 100;
         }
     }

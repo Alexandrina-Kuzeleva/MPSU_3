@@ -17,7 +17,7 @@ namespace Task6
         {
             var tests = new[]
             {
-                new TestCase(ProductCategory.Food, 100,
+                new TestCase(ProductCategory.Food, 200,
                     new TaxContext(), 5),
 
                 new TestCase(ProductCategory.Electronics, 200,
