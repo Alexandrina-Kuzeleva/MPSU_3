@@ -1,4 +1,4 @@
-﻿# run.ps1
+# run.ps1
 $args = $args[0]
 
 if ($args -eq "") {

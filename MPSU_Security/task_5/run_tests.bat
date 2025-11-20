@@ -1,5 +1,4 @@
-﻿@echo off
-@chcp 65001 >nul
+@echo off
 REM Запуск тестов для Argon2 или Bcrypt (Windows)
 
 IF "%~1"=="" (

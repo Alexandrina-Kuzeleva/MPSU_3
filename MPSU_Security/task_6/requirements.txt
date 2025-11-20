@@ -1,0 +1,5 @@
+pyjwt
+passlib
+python-dotenv
+pytest
+bcrypt==4.1.3

@@ -17,7 +17,7 @@ def test_new_user_delay_is_zero():
     Флаг/показатель задержки у НОВОГО пользователя должен быть 0.
     """
     store = InMemoryUserStorage()
-    auth.register_user(store, "alice", "alice@example.com", "Password123!")
+    auth.register_user(store, "alice", "alice@example.com", "Pass123!")
 
     u = User.load(store, "alice")
     assert u is not None
@@ -32,7 +32,7 @@ def test_delay_increases_by_formula_on_each_failed_attempt(monkeypatch):
     Проверяем и сам показатель пользователя, и то, что time.sleep() вызывается не меньше этой задержки.
     """
     store = InMemoryUserStorage()
-    auth.register_user(store, "bob", "bob@example.com", "Password123!")
+    auth.register_user(store, "bob", "bob@example.com", "Pass123!")
 
     slept = []
 
@@ -67,7 +67,7 @@ def test_response_time_respects_user_delay(monkeypatch):
     что после успешного логина задержка у пользователя сбрасывается в 0.
     """
     store = InMemoryUserStorage()
-    auth.register_user(store, "carol", "carol@example.com", "Password123!")
+    auth.register_user(store, "carol", "carol@example.com", "Pass123!")
 
     captured = {"last_sleep": None}
 
@@ -88,7 +88,7 @@ def test_response_time_respects_user_delay(monkeypatch):
     assert captured["last_sleep"] + 1e-12 >= expected
 
     # успешный логин должен сбросить показатель задержки
-    assert auth.verify_credentials(store, "carol", "Password123!") is True
+    assert auth.verify_credentials(store, "carol", "Pass123!") is True
     u2 = User.load(store, "carol")
     assert u2 is not None
     assert u2.backoff_seconds == pytest.approx(0.0, rel=0, abs=1e-6)

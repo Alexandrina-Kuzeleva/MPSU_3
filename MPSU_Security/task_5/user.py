@@ -14,12 +14,17 @@ class User:
     username: str
     email: str
     password_hash: str
+    failed_login_attempts: int = 0
+    account_locked: bool = False
+
 
     def save(self, storage: UserStorage) -> None:
         storage.save_user({
             "username": self.username,
             "email": self.email,
             "password_hash": self.password_hash,
+            "failed_login_attempts": self.failed_login_attempts,
+            "account_locked": self.account_locked,
         })
 
     @classmethod
@@ -28,6 +33,7 @@ class User:
         if rec is None:
             return None
         return cls(**rec)
+
 
     @classmethod
     def exists(cls, storage: UserStorage, username: str) -> bool:
