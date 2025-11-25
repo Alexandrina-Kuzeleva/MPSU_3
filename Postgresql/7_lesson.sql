@@ -24,17 +24,17 @@ INSERT INTO orders_import_lines (source_file, line_no, raw_line, note) VALUES
 ('marketplace_A_2025_11.csv', 20, 'Customer: bad@-domain.com; +7 921 ABC-12-34; Items: SKU: 12-AB-!!', 'trap-invalid-email-phone-sku'),
 ('orders_dirty.csv', 6, '"O\'Connor, Liam","New York, NY","500"', 'dirty csv with apostrophe');
 
--- Задание 1: Найти все строки, содержащие корректный email
+
 SELECT *
 FROM orders_import_lines
 WHERE raw_line ~ '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}';
 
--- Задание 2: Найти строки, НЕ содержащие корректный email
+
 SELECT *
 FROM orders_import_lines
 WHERE raw_line !~ '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}';
 
--- Задание 3: Извлечь первый email из raw_line
+
 SELECT 
     id,
     source_file,
@@ -43,7 +43,7 @@ SELECT
 FROM orders_import_lines
 WHERE raw_line ~ '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}';
 
--- Задание 4: Извлечь все SKU/артикулы
+
 SELECT 
     id,
     source_file,
@@ -52,7 +52,7 @@ SELECT
 FROM orders_import_lines
 WHERE raw_line ~* '[A-Z0-9]{2,}-[A-Z0-9-]+';
 
--- Задание 5: Нормализовать телефонные номера
+
 SELECT 
     id,
     source_file,
@@ -62,7 +62,7 @@ SELECT
 FROM orders_import_lines
 WHERE raw_line ~ '[+0-9() -]{10,}';
 
--- Задание 6: Преобразовать ценовые поля в числовой формат
+
 SELECT 
     id,
     source_file,
@@ -95,7 +95,7 @@ SELECT
 FROM orders_import_lines
 WHERE raw_line ~ 'price:|Fare:|charge:|amount:';
 
--- Задание 7: Разбить список тегов на массив
+
 SELECT 
     id,
     source_file,
@@ -111,7 +111,7 @@ SELECT
 FROM orders_import_lines
 WHERE raw_line LIKE '%tags:%';
 
--- Задание 8: Разбить dirty CSV на отдельные поля
+
 SELECT 
     id,
     source_file,
@@ -123,13 +123,13 @@ SELECT
 FROM orders_import_lines
 WHERE source_file = 'orders_dirty.csv';
 
--- Задание 9: Найти в логах строки с ошибками
+
 SELECT *
 FROM orders_import_lines
 WHERE source_file = 'processor_log.txt'
 AND raw_line ~* 'error';
 
--- Задание 10: Заменить error на ERROR в логах
+
 SELECT 
     id,
     source_file,
