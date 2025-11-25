@@ -1,3 +1,4 @@
+-- Active: 1760104406526@@127.0.0.1@5432@postgres
 DROP TABLE IF EXISTS orders_import_lines;
 CREATE TABLE orders_import_lines (
   id serial PRIMARY KEY,
@@ -22,7 +23,19 @@ INSERT INTO orders_import_lines (source_file, line_no, raw_line, note) VALUES
 ('processor_log.txt', 102, 'Error: invalid phone for order 1002', 'log'),
 ('processor_log.txt', 103, 'error: missing sku in items list', 'log'),
 ('marketplace_A_2025_11.csv', 20, 'Customer: bad@-domain.com; +7 921 ABC-12-34; Items: SKU: 12-AB-!!', 'trap-invalid-email-phone-sku'),
-('orders_dirty.csv', 6, '"O\'Connor, Liam","New York, NY","500"', 'dirty csv with apostrophe');
+('orders_dirty.csv', 6, '"O\Connor, Liam","New York, NY","500"', 'dirty csv with apostrophe');
+
+
+-- 1. Поиск строк с корректным email
+-- 2. Поиск строк без корректного email  
+-- 3. Извлечение первого email с метаданными
+-- 4. Извлечение всех SKU/артикулов
+-- 5. Нормализация телефонных номеров
+-- 6. Преобразование цен в числовой формат
+-- 7. Разбивка тегов на массив
+-- 8. Разбор CSV строк на отдельные поля
+-- 9. Поиск ошибок в логах
+-- 10. Замена error на ERROR в логах
 
 
 SELECT *
