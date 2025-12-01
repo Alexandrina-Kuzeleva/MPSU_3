@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+asyncpg
+python-dotenv
+bcrypt
+pydantic
+pytest
+httpx
+pytest-asyncio
+aiosqlite
+asgi-lifespan
+
+sqlalchemy[asyncio]==2.0.23
+alembic==1.12.1
+greenlet==3.0.3
