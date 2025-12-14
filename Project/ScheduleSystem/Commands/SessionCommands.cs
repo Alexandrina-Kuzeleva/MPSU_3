@@ -9,7 +9,7 @@ public static class SessionCommands
 {
     public static void Run(string[] args)
     {
-        if (args.Length < 2) throw new ArgumentException("Usage: sched session <add|list|show|delete|conflicts>");
+        if (args.Length < 2) throw new ArgumentException("Usage: sched session <add|list|show|update|delete|conflicts>");
 
         var action = args[1].ToLower();
         switch (action)
@@ -17,6 +17,7 @@ public static class SessionCommands
             case "add":           Add(args); break;
             case "list":          List(args); break;
             case "show":          Show(int.Parse(args[2])); break;
+            case "update":        Update(int.Parse(args[2]), args); break;
             case "delete":        Delete(int.Parse(args[2])); break;
             case "conflicts":     FindConflicts(); break;
             default: throw new ArgumentException("Unknown session action");
@@ -75,12 +76,53 @@ public static class SessionCommands
         Console.WriteLine($"Session(s) created: {sessionsToAdd.Count} record(s) added.");
     }
 
+    static void Update(int id, string[] args)
+    {
+        var session = DataContext.Sessions.FirstOrDefault(s => s.Id == id)
+                      ?? throw new KeyNotFoundException($"Session {id} not found");
+
+        var newCourseId = ArgsParser.GetInt(args, "--course");
+        var newTeacherId = ArgsParser.GetInt(args, "--teacher");
+        var newGroupId = ArgsParser.GetInt(args, "--group");
+        var newRoomId = ArgsParser.GetInt(args, "--room");
+        var newDateStr = ArgsParser.GetValue(args, "--date");
+        var newStartStr = ArgsParser.GetValue(args, "--start");
+        var newEndStr = ArgsParser.GetValue(args, "--end");
+        var newNotes = ArgsParser.GetValue(args, "--notes");
+
+        var updatedSession = new Session(
+            Id: session.Id,
+            CourseId: newCourseId ?? session.CourseId,
+            TeacherId: newTeacherId ?? session.TeacherId,
+            GroupId: newGroupId ?? session.GroupId,
+            RoomId: newRoomId ?? session.RoomId,
+            Date: newDateStr != null ? DateOnly.Parse(newDateStr) : session.Date,
+            Start: newStartStr != null ? TimeOnly.Parse(newStartStr) : session.Start,
+            End: newEndStr != null ? TimeOnly.Parse(newEndStr) : session.End,
+            Notes: newNotes ?? session.Notes
+        );
+
+        if (updatedSession.Start >= updatedSession.End) 
+            throw new ArgumentException("Start time must be before end time");
+
+        var (conflict, msg) = ConflictService.Check(updatedSession);
+        if (conflict) throw new InvalidOperationException($"Conflict detected: {msg}");
+
+        DataContext.Sessions.Remove(session);
+        DataContext.Sessions.Add(updatedSession);
+        DataContext.SaveAll();
+        
+        Console.WriteLine($"Session {id} updated.");
+    }
+
     static void List(string[] args)
     {
         var groupId = ArgsParser.GetInt(args, "--group");
         var teacherId = ArgsParser.GetInt(args, "--teacher");
         var roomId = ArgsParser.GetInt(args, "--room");
         var dateStr = ArgsParser.GetValue(args, "--date");
+        var fromStr = ArgsParser.GetValue(args, "--from");
+        var toStr = ArgsParser.GetValue(args, "--to");
 
         var query = DataContext.Sessions.AsQueryable();
 
@@ -88,6 +130,8 @@ public static class SessionCommands
         if (teacherId.HasValue) query = query.Where(s => s.TeacherId == teacherId);
         if (roomId.HasValue) query = query.Where(s => s.RoomId == roomId);
         if (dateStr != null) query = query.Where(s => s.Date == DateOnly.Parse(dateStr));
+        if (fromStr != null) query = query.Where(s => s.Date >= DateOnly.Parse(fromStr));
+        if (toStr != null) query = query.Where(s => s.Date <= DateOnly.Parse(toStr));
 
         var list = query.OrderBy(s => s.Date).ThenBy(s => s.Start).ToList();
 

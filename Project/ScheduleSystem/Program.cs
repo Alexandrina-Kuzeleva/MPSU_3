@@ -9,16 +9,16 @@ class Program
     {
         try
         {
-            DataContext.Initialize();
-
             if (args.Length == 0)
             {
                 Console.WriteLine("sched — university schedule manager");
-                Console.WriteLine("Commands: init, room, teacher, group, course, session, report, backup, restore");
+                Console.WriteLine("Commands: init, room, teacher, group, course, session, report, backup, restore, import, export, clear");
                 return 1;
             }
 
             string cmd = args[0].ToLower();
+
+            DataContext.Initialize();
 
             switch (cmd)
             {
@@ -31,6 +31,9 @@ class Program
                 case "report":    ReportCommands.Run(args); break;
                 case "backup":    BackupCommands.Backup(args); break;
                 case "restore":   BackupCommands.Restore(args); break;
+                case "import":    ImportExportCommands.Run(args); break;
+                case "export":    ImportExportCommands.Run(args); break;
+                case "config":    ConfigCommand.Run(args); break;
                 case "clear":     ClearCommands.Run(); break;
 
                 default:
@@ -50,6 +53,7 @@ class Program
                 ArgumentException or FormatException => 2,
                 KeyNotFoundException => 3,
                 InvalidOperationException => 4,
+                FileNotFoundException => 5,
                 _ => 1
             };
         }

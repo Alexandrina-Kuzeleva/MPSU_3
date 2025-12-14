@@ -22,7 +22,7 @@ public static class CourseCommands
                 break;
             case "update":
                 if (args.Length < 3) throw new ArgumentException("Usage: sched course update <id> [--title new] [--code new] [--duration N]");
-                Update(args[2]);
+                Update(args[2], args);
                 break;
             default: throw new ArgumentException($"Unknown course action: {action}");
         }
@@ -85,7 +85,7 @@ public static class CourseCommands
         Console.WriteLine($"Duration: {course.DurationMinutes} minutes");
     }
 
-    static void Update(string identifier)
+    static void Update(string identifier, string[] args)
     {
         Course? course = null;
         if (int.TryParse(identifier, out int id))
@@ -100,16 +100,21 @@ public static class CourseCommands
         if (course == null)
             throw new KeyNotFoundException($"Course not found: '{identifier}'");
 
-        var newTitle = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--title");
-        var newCode = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--code");
-        var newDurationStr = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--duration");
+        var newTitle = ArgsParser.GetValue(args, "--title");
+        var newCode = ArgsParser.GetValue(args, "--code");
+        var newDurationStr = ArgsParser.GetValue(args, "--duration");
 
-        if (newTitle != null) course = course with { Title = newTitle };
-        if (newCode != null) course = course with { Code = newCode };
-        if (int.TryParse(newDurationStr, out int newDuration)) course = course with { DurationMinutes = newDuration };
+        var updatedCourse = new Course(
+            Id: course.Id,
+            Title: newTitle ?? course.Title,
+            Code: newCode ?? course.Code,
+            DurationMinutes: int.TryParse(newDurationStr, out int duration) ? duration : course.DurationMinutes
+        );
 
+        DataContext.Courses.Remove(course);
+        DataContext.Courses.Add(updatedCourse);
         DataContext.SaveAll();
-        Console.WriteLine($"Course \"{course.Title}\" (id={course.Id}) updated.");
+        Console.WriteLine($"Course \"{updatedCourse.Title}\" (id={updatedCourse.Id}) updated.");
     }
 
     static void Delete(string identifier)

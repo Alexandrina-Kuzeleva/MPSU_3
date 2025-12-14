@@ -25,7 +25,7 @@ public static class RoomCommands
                 break;
             case "update":
                 if (args.Length < 3) throw new ArgumentException("Usage: sched room update <id|code> [--code new] [--capacity N] [--building B]");
-                Update(args[2]);
+                Update(args[2], args);
                 break;
             default: throw new ArgumentException($"Unknown room action: {action}");
         }
@@ -87,7 +87,7 @@ public static class RoomCommands
         Console.WriteLine($"Building: {room.Building ?? "—"}");
     }
 
-    static void Update(string identifier)
+    static void Update(string identifier, string[] args)
     {
         Room? room = null;
         if (int.TryParse(identifier, out int id))
@@ -101,16 +101,22 @@ public static class RoomCommands
         if (room == null)
             throw new KeyNotFoundException($"Room not found: '{identifier}'");
 
-        var newCode = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--code");
-        var newCapacityStr = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--capacity");
-        var newBuilding = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--building");
+        var newCode = ArgsParser.GetValue(args, "--code");
+        var newCapacityStr = ArgsParser.GetValue(args, "--capacity");
+        var newBuilding = ArgsParser.GetValue(args, "--building");
 
-        if (newCode != null) room = room with { Code = newCode };
-        if (int.TryParse(newCapacityStr, out int newCapacity)) room = room with { Capacity = newCapacity };
-        if (newBuilding != null) room = room with { Building = newBuilding };
+        var updatedRoom = new Room(
+            Id: room.Id,
+            Code: newCode ?? room.Code,
+            Capacity: int.TryParse(newCapacityStr, out int capacity) ? capacity : room.Capacity,
+            Building: newBuilding ?? room.Building,
+            AttributesJson: room.AttributesJson
+        );
 
+        DataContext.Rooms.Remove(room);
+        DataContext.Rooms.Add(updatedRoom);
         DataContext.SaveAll();
-        Console.WriteLine($"Room {room.Code} (id={room.Id}) updated.");
+        Console.WriteLine($"Room {updatedRoom.Code} (id={updatedRoom.Id}) updated.");
     }
 
     static void Delete(string identifier)

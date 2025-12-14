@@ -27,7 +27,7 @@ public static class TeacherCommands
                 break;
             case "update":
                 if (args.Length < 3) throw new ArgumentException("Usage: sched teacher update <id> [--name new] [--email new]");
-                Update(int.Parse(args[2]));
+                Update(int.Parse(args[2]), args);
                 break;
             default: throw new ArgumentException($"Unknown teacher action: {action}");
         }
@@ -72,19 +72,24 @@ public static class TeacherCommands
         Console.WriteLine($"Email: {t.Email ?? "—"}");
     }
 
-    static void Update(int id)
+    static void Update(int id, string[] args)
     {
         var teacher = DataContext.Teachers.FirstOrDefault(t => t.Id == id)
                     ?? throw new KeyNotFoundException($"Teacher {id} not found");
 
-        var newName = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--name");
-        var newEmail = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--email");
+        var newName = ArgsParser.GetValue(args, "--name");
+        var newEmail = ArgsParser.GetValue(args, "--email");
 
-        if (newName != null) teacher = teacher with { Name = newName };
-        if (newEmail != null) teacher = teacher with { Email = newEmail };
+        var updatedTeacher = new Teacher(
+            Id: teacher.Id,
+            Name: newName ?? teacher.Name,
+            Email: newEmail ?? teacher.Email
+        );
 
+        DataContext.Teachers.Remove(teacher);
+        DataContext.Teachers.Add(updatedTeacher);
         DataContext.SaveAll();
-        Console.WriteLine($"Teacher {teacher.Name} (id={teacher.Id}) updated.");
+        Console.WriteLine($"Teacher {updatedTeacher.Name} (id={updatedTeacher.Id}) updated.");
     }
 
     static void Delete(int id)

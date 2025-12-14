@@ -25,7 +25,7 @@ public static class GroupCommands
                 break;
             case "update":
                 if (args.Length < 3) throw new ArgumentException("Usage: sched group update <id> [--code new] [--size new] [--year new]");
-                Update(args[2]);
+                Update(args[2],args);
                 break;
             default: throw new ArgumentException($"Unknown group action: {action}");
         }
@@ -88,7 +88,7 @@ public static class GroupCommands
         Console.WriteLine($"Year: {group.Year?.ToString() ?? "—"}");
     }
 
-    static void Update(string identifier)
+    static void Update(string identifier, string[] args)
     {
         Group? group = null;
         if (int.TryParse(identifier, out int id))
@@ -102,17 +102,30 @@ public static class GroupCommands
         if (group == null)
             throw new KeyNotFoundException($"Group not found: '{identifier}'");
 
-        var newCode = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--code");
-        var newSizeStr = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--size");
-        var newYearStr = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--year");
+        var newCode = ArgsParser.GetValue(args, "--code");
+        var newSizeStr = ArgsParser.GetValue(args, "--size");
+        var newYearStr = ArgsParser.GetValue(args, "--year");
 
-        if (newCode != null) group = group with { Code = newCode };
-        if (int.TryParse(newSizeStr, out int newSize)) group = group with { Size = newSize };
-        if (int.TryParse(newYearStr, out int newYear)) group = group with { Year = newYear };
-        else if (newYearStr == "") group = group with { Year = null }; // чтобы сбросить year
+        int? year = group.Year;
+        if (newYearStr != null)
+        {
+            if (int.TryParse(newYearStr, out int newYear))
+                year = newYear;
+            else if (newYearStr == "")
+                year = null;
+        }
 
+        var updatedGroup = new Group(
+            Id: group.Id,
+            Code: newCode ?? group.Code,
+            Size: int.TryParse(newSizeStr, out int size) ? size : group.Size,
+            Year: year
+        );
+
+        DataContext.Groups.Remove(group);
+        DataContext.Groups.Add(updatedGroup);
         DataContext.SaveAll();
-        Console.WriteLine($"Group {group.Code} (id={group.Id}) updated.");
+        Console.WriteLine($"Group {updatedGroup.Code} (id={updatedGroup.Id}) updated.");
     }
 
     static void Delete(string identifier)
