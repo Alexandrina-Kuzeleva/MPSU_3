@@ -44,6 +44,7 @@ public static class SessionCommands
         var dowStr = ArgsParser.GetValue(args, "--dow");
         var fromStr = ArgsParser.GetValue(args, "--from");
         var toStr = ArgsParser.GetValue(args, "--to");
+        var force = ArgsParser.HasFlag(args, "--force");
 
         List<Session> sessionsToAdd;
 
@@ -54,7 +55,7 @@ public static class SessionCommands
             var to = DateOnly.Parse(toStr);
 
             sessionsToAdd = RecurrenceService.GenerateRecurring(
-                courseId, teacherId, groupId, roomId, start, end, dow, from, to, notes);
+                courseId, teacherId, groupId, roomId, start, end, dow, from, to, notes,force);
         }
         else
         {
@@ -64,7 +65,15 @@ public static class SessionCommands
                 Date: date, Start: start, End: end, Notes: notes);
 
             var (conflict, msg) = ConflictService.Check(session);
-            if (conflict) throw new InvalidOperationException($"Conflict detected: {msg}");
+            if (conflict && !force)
+                throw new InvalidOperationException($"Conflict detected: {msg}\nUse --force to add anyway.");
+
+            if (conflict && force)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"⚠ Warning: Adding session with conflict: {msg}");
+                Console.ResetColor();
+            }
 
             sessionsToAdd = new() { session };
         }
@@ -89,6 +98,7 @@ public static class SessionCommands
         var newStartStr = ArgsParser.GetValue(args, "--start");
         var newEndStr = ArgsParser.GetValue(args, "--end");
         var newNotes = ArgsParser.GetValue(args, "--notes");
+        var force = ArgsParser.HasFlag(args, "--force");
 
         var updatedSession = new Session(
             Id: session.Id,
@@ -106,7 +116,15 @@ public static class SessionCommands
             throw new ArgumentException("Start time must be before end time");
 
         var (conflict, msg) = ConflictService.Check(updatedSession);
-        if (conflict) throw new InvalidOperationException($"Conflict detected: {msg}");
+        if (conflict && !force) // ← Проверять force
+            throw new InvalidOperationException($"Conflict detected: {msg}\nUse --force to update anyway.");
+
+        if (conflict && force)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"⚠ Warning: Updating session with conflict: {msg}");
+            Console.ResetColor();
+        }
 
         DataContext.Sessions.Remove(session);
         DataContext.Sessions.Add(updatedSession);
@@ -123,6 +141,10 @@ public static class SessionCommands
         var dateStr = ArgsParser.GetValue(args, "--date");
         var fromStr = ArgsParser.GetValue(args, "--from");
         var toStr = ArgsParser.GetValue(args, "--to");
+        var dayStr = ArgsParser.GetValue(args, "--day");
+        var timeStr = ArgsParser.GetValue(args, "--time");
+        var limit = ArgsParser.GetInt(args, "--limit");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
 
         var query = DataContext.Sessions.AsQueryable();
 
@@ -132,13 +154,44 @@ public static class SessionCommands
         if (dateStr != null) query = query.Where(s => s.Date == DateOnly.Parse(dateStr));
         if (fromStr != null) query = query.Where(s => s.Date >= DateOnly.Parse(fromStr));
         if (toStr != null) query = query.Where(s => s.Date <= DateOnly.Parse(toStr));
-
-        var list = query.OrderBy(s => s.Date).ThenBy(s => s.Start).ToList();
+        
+        if (dayStr != null)
+        {
+            var day = ParseDayOfWeek(dayStr);
+            query = query.Where(s => s.Date.DayOfWeek == day);
+        }
+        
+        if (timeStr != null)
+        {
+            var times = timeStr.Split('-');
+            if (times.Length == 2)
+            {
+                var startTime = TimeOnly.Parse(times[0]);
+                var endTime = TimeOnly.Parse(times[1]);
+                query = query.Where(s => s.Start >= startTime && s.End <= endTime);
+            }
+        }
 
         if (ArgsParser.HasFlag(args, "--conflicts-only"))
         {
-            list = list.Where(s => ConflictService.Check(s, checkGroup: false).hasConflict).ToList();
+            var conflictingSessions = new List<Session>();
+            foreach (var session in query)
+            {
+                var (hasConflict, _) = ConflictService.Check(session, checkGroup: false);
+                if (hasConflict) conflictingSessions.Add(session);
+            }
+            query = conflictingSessions.AsQueryable();
         }
+
+        query = query.OrderBy(s => s.Date).ThenBy(s => s.Start);
+
+        if (reverse)
+            query = query.Reverse();
+
+        var list = query.ToList();
+
+        if (limit.HasValue)
+            list = list.Take(limit.Value).ToList();
 
         if (!list.Any())
         {

@@ -14,7 +14,7 @@ public static class RoomCommands
         switch (action)
         {
             case "add":     Add(args); break;
-            case "list":    List(); break;
+            case "list":    List(args); break;
             case "show":    
                 if (args.Length < 3) throw new ArgumentException("Usage: sched room show <id|code>");
                 Show(args[2]); 
@@ -50,16 +50,57 @@ public static class RoomCommands
         Console.WriteLine($"Room {room.Code} (id={room.Id}) created.");
     }
 
-    static void List()
+    static void List(string[] args)
     {
-        if (!DataContext.Rooms.Any())
+        var building = ArgsParser.GetValue(args, "--building");
+        var minCapacity = ArgsParser.GetInt(args, "--min-capacity");
+        var maxCapacity = ArgsParser.GetInt(args, "--max-capacity");
+        var codeLike = ArgsParser.GetValue(args, "--code-like");
+        var sortBy = ArgsParser.GetValue(args, "--sort") ?? "code";
+        var limit = ArgsParser.GetInt(args, "--limit");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+
+        var query = DataContext.Rooms.AsQueryable();
+
+        if (!string.IsNullOrEmpty(building))
+            query = query.Where(r => r.Building != null && r.Building.Contains(building, StringComparison.OrdinalIgnoreCase));
+        
+        if (minCapacity.HasValue)
+            query = query.Where(r => r.Capacity >= minCapacity.Value);
+        
+        if (maxCapacity.HasValue)
+            query = query.Where(r => r.Capacity <= maxCapacity.Value);
+        
+        if (!string.IsNullOrEmpty(codeLike))
+            query = query.Where(r => r.Code.Contains(codeLike, StringComparison.OrdinalIgnoreCase));
+
+        query = sortBy.ToLower() switch
         {
-            Console.WriteLine("No rooms.");
+            "capacity" => query.OrderBy(r => r.Capacity),
+            "building" => query.OrderBy(r => r.Building ?? ""),
+            _ => query.OrderBy(r => r.Code)
+        };
+
+        if (reverse)
+            query = query.Reverse();
+
+        var rooms = query.ToList();
+
+        if (!rooms.Any())
+        {
+            Console.WriteLine("No rooms found.");
             return;
         }
 
-        foreach (var r in DataContext.Rooms.OrderBy(r => r.Code))
-            Console.WriteLine($"{r.Id,3} | {r.Code,-10} | {r.Capacity,3} seats | {r.Building ?? "-"}");
+        if (limit.HasValue)
+            rooms = rooms.Take(limit.Value).ToList();
+
+        Console.WriteLine($"Found {rooms.Count} room(s):");
+        Console.WriteLine("ID  | Code       | Capacity | Building");
+        Console.WriteLine(new string('-', 50));
+        
+        foreach (var r in rooms)
+            Console.WriteLine($"{r.Id,3} | {r.Code,-10} | {r.Capacity,8} | {r.Building ?? "-"}");
     }
 
     static void Show(string identifier)

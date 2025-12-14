@@ -14,7 +14,7 @@ public static class TeacherCommands
         switch (action)
         {
             case "add":     Add(args); break;
-            case "list":    List(); break;
+            case "list":    List(args); break;
             case "show":
                 if (args.Length < 3) 
                     throw new ArgumentException("Usage: sched teacher show <id>");
@@ -50,15 +50,47 @@ public static class TeacherCommands
         Console.WriteLine($"Teacher {teacher.Name} (id={teacher.Id}) created.");
     }
 
-    static void List()
+    static void List(string[] args)
     {
-        if (!DataContext.Teachers.Any())
+        var nameLike = ArgsParser.GetValue(args, "--name-like");
+        var emailLike = ArgsParser.GetValue(args, "--email-like");
+        var sortBy = ArgsParser.GetValue(args, "--sort") ?? "name";
+        var limit = ArgsParser.GetInt(args, "--limit");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+
+        var query = DataContext.Teachers.AsQueryable();
+
+        if (!string.IsNullOrEmpty(nameLike))
+            query = query.Where(t => t.Name.Contains(nameLike, StringComparison.OrdinalIgnoreCase));
+        
+        if (!string.IsNullOrEmpty(emailLike))
+            query = query.Where(t => t.Email != null && t.Email.Contains(emailLike, StringComparison.OrdinalIgnoreCase));
+
+        query = sortBy.ToLower() switch
         {
-            Console.WriteLine("No teachers.");
+            "email" => query.OrderBy(t => t.Email ?? ""),
+            _ => query.OrderBy(t => t.Name)
+        };
+
+        if (reverse)
+            query = query.Reverse();
+
+        var teachers = query.ToList();
+
+        if (!teachers.Any())
+        {
+            Console.WriteLine("No teachers found.");
             return;
         }
 
-        foreach (var t in DataContext.Teachers.OrderBy(t => t.Name))
+        if (limit.HasValue)
+            teachers = teachers.Take(limit.Value).ToList();
+
+        Console.WriteLine($"Found {teachers.Count} teacher(s):");
+        Console.WriteLine("ID  | Name                         | Email");
+        Console.WriteLine(new string('-', 70));
+        
+        foreach (var t in teachers)
             Console.WriteLine($"{t.Id,3} | {t.Name,-30} | {t.Email ?? "-"}");
     }
 

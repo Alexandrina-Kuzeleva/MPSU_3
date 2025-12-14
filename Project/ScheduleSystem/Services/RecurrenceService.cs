@@ -11,7 +11,8 @@ public static class RecurrenceService
         DayOfWeek dayOfWeek,
         DateOnly fromDate,
         DateOnly toDate,
-        string notes = "")
+        string notes = "",
+        bool force = false)
     {
         var sessions = new List<Session>();
 

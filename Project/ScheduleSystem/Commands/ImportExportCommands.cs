@@ -38,6 +38,7 @@ public static class ImportExportCommands
         var filePath = ArgsParser.GetValue(args, "--file") ?? throw new ArgumentException("Missing --file");
         var entity = ArgsParser.GetValue(args, "--entity") ?? throw new ArgumentException("Missing --entity");
         var mode = ArgsParser.GetValue(args, "--mode") ?? "append";
+        var force = ArgsParser.HasFlag(args, "--force");
 
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"File not found: {filePath}");
@@ -76,19 +77,140 @@ public static class ImportExportCommands
                         );
 
                         var conflictResult = ConflictService.Check(session);
-                        if (!conflictResult.hasConflict)
+                        if (!conflictResult.hasConflict || force)
                         {
+                            if (conflictResult.hasConflict && force)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine($"⚠ Warning: Importing session with conflict: {conflictResult.message}");
+                                Console.ResetColor();
+                            }
+                            
                             DataContext.Sessions.Add(session);
                             successCount++;
                         }
                         else
                         {
                             errorCount++;
+                            Console.WriteLine($"Skipped line due to conflict: {conflictResult.message}");
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         errorCount++;
+                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                    }
+                }
+                break;
+
+            case "rooms":
+                if (mode == "replace") DataContext.Rooms.Clear();
+                
+                foreach (var line in dataLines)
+                {
+                    try
+                    {
+                        var values = ParseCsvLine(line);
+                        if (values.Length < 2) continue;
+
+                        var room = new Room(
+                            Id: DataContext.NextId<Room>(),
+                            Code: values[0],
+                            Capacity: int.TryParse(values[1], out int capacity) ? capacity : 0,
+                            Building: values.Length > 2 ? values[2] : null,
+                            AttributesJson: values.Length > 3 ? values[3] : null
+                        );
+
+                        DataContext.Rooms.Add(room);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                    }
+                }
+                break;
+
+            case "teachers":
+                if (mode == "replace") DataContext.Teachers.Clear();
+                
+                foreach (var line in dataLines)
+                {
+                    try
+                    {
+                        var values = ParseCsvLine(line);
+                        if (values.Length < 1) continue;
+
+                        var teacher = new Teacher(
+                            Id: DataContext.NextId<Teacher>(),
+                            Name: values[0],
+                            Email: values.Length > 1 ? values[1] : null
+                        );
+
+                        DataContext.Teachers.Add(teacher);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                    }
+                }
+                break;
+
+            case "groups":
+                if (mode == "replace") DataContext.Groups.Clear();
+                
+                foreach (var line in dataLines)
+                {
+                    try
+                    {
+                        var values = ParseCsvLine(line);
+                        if (values.Length < 1) continue;
+
+                        var group = new Group(
+                            Id: DataContext.NextId<Group>(),
+                            Code: values[0],
+                            Size: values.Length > 1 && int.TryParse(values[1], out int size) ? size : 0,
+                            Year: values.Length > 2 && int.TryParse(values[2], out int year) ? year : null
+                        );
+
+                        DataContext.Groups.Add(group);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                    }
+                }
+                break;
+
+            case "courses":
+                if (mode == "replace") DataContext.Courses.Clear();
+                
+                foreach (var line in dataLines)
+                {
+                    try
+                    {
+                        var values = ParseCsvLine(line);
+                        if (values.Length < 1) continue;
+
+                        var course = new Course(
+                            Id: DataContext.NextId<Course>(),
+                            Title: values[0],
+                            Code: values.Length > 1 ? values[1] : null,
+                            DurationMinutes: values.Length > 2 && int.TryParse(values[2], out int duration) ? duration : 90
+                        );
+
+                        DataContext.Courses.Add(course);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        Console.WriteLine($"Error parsing line: {ex.Message}");
                     }
                 }
                 break;
@@ -107,6 +229,13 @@ public static class ImportExportCommands
         var entity = ArgsParser.GetValue(args, "--entity") ?? throw new ArgumentException("Missing --entity");
         var fromStr = ArgsParser.GetValue(args, "--from");
         var toStr = ArgsParser.GetValue(args, "--to");
+        var building = ArgsParser.GetValue(args, "--building");
+        var minCapacity = ArgsParser.GetInt(args, "--min-capacity");
+        var maxCapacity = ArgsParser.GetInt(args, "--max-capacity");
+        var nameLike = ArgsParser.GetValue(args, "--name-like");
+        var year = ArgsParser.GetInt(args, "--year");
+        var titleLike = ArgsParser.GetValue(args, "--title-like");
+        var limit = ArgsParser.GetInt(args, "--limit");
 
         DateOnly? from = fromStr != null ? DateOnly.Parse(fromStr) : null;
         DateOnly? to = toStr != null ? DateOnly.Parse(toStr) : null;
@@ -118,12 +247,18 @@ public static class ImportExportCommands
             case "sessions":
                 lines.Add("Date,Time,Course,Teacher,Group,Room,Notes");
                 
-                var sessions = DataContext.Sessions
-                    .Where(s => !from.HasValue || s.Date >= from.Value)
-                    .Where(s => !to.HasValue || s.Date <= to.Value)
+                var sessionsQuery = DataContext.Sessions.AsQueryable();
+                
+                if (from.HasValue) sessionsQuery = sessionsQuery.Where(s => s.Date >= from.Value);
+                if (to.HasValue) sessionsQuery = sessionsQuery.Where(s => s.Date <= to.Value);
+                
+                var sessions = sessionsQuery
                     .OrderBy(s => s.Date)
                     .ThenBy(s => s.Start)
                     .ToList();
+
+                if (limit.HasValue)
+                    sessions = sessions.Take(limit.Value).ToList();
 
                 foreach (var s in sessions)
                 {
@@ -137,16 +272,46 @@ public static class ImportExportCommands
                 break;
 
             case "rooms":
-                lines.Add("Code,Capacity,Building");
-                foreach (var r in DataContext.Rooms.OrderBy(r => r.Code))
+                lines.Add("Code,Capacity,Building,AttributesJson");
+                
+                var roomsQuery = DataContext.Rooms.AsQueryable();
+                
+                if (!string.IsNullOrEmpty(building))
+                    roomsQuery = roomsQuery.Where(r => r.Building != null && r.Building.Contains(building, StringComparison.OrdinalIgnoreCase));
+                if (minCapacity.HasValue)
+                    roomsQuery = roomsQuery.Where(r => r.Capacity >= minCapacity.Value);
+                if (maxCapacity.HasValue)
+                    roomsQuery = roomsQuery.Where(r => r.Capacity <= maxCapacity.Value);
+                
+                var rooms = roomsQuery
+                    .OrderBy(r => r.Code)
+                    .ToList();
+
+                if (limit.HasValue)
+                    rooms = rooms.Take(limit.Value).ToList();
+
+                foreach (var r in rooms)
                 {
-                    lines.Add($"{EscapeCsv(r.Code)},{r.Capacity},{EscapeCsv(r.Building ?? "")}");
+                    lines.Add($"{EscapeCsv(r.Code)},{r.Capacity},{EscapeCsv(r.Building ?? "")},{EscapeCsv(r.AttributesJson ?? "")}");
                 }
                 break;
 
             case "teachers":
                 lines.Add("Name,Email");
-                foreach (var t in DataContext.Teachers.OrderBy(t => t.Name))
+                
+                var teachersQuery = DataContext.Teachers.AsQueryable();
+                
+                if (!string.IsNullOrEmpty(nameLike))
+                    teachersQuery = teachersQuery.Where(t => t.Name.Contains(nameLike, StringComparison.OrdinalIgnoreCase));
+                
+                var teachers = teachersQuery
+                    .OrderBy(t => t.Name)
+                    .ToList();
+
+                if (limit.HasValue)
+                    teachers = teachers.Take(limit.Value).ToList();
+
+                foreach (var t in teachers)
                 {
                     lines.Add($"{EscapeCsv(t.Name)},{EscapeCsv(t.Email ?? "")}");
                 }
@@ -154,7 +319,20 @@ public static class ImportExportCommands
 
             case "groups":
                 lines.Add("Code,Size,Year");
-                foreach (var g in DataContext.Groups.OrderBy(g => g.Code))
+                
+                var groupsQuery = DataContext.Groups.AsQueryable();
+                
+                if (year.HasValue)
+                    groupsQuery = groupsQuery.Where(g => g.Year == year);
+                
+                var groups = groupsQuery
+                    .OrderBy(g => g.Code)
+                    .ToList();
+
+                if (limit.HasValue)
+                    groups = groups.Take(limit.Value).ToList();
+
+                foreach (var g in groups)
                 {
                     lines.Add($"{EscapeCsv(g.Code)},{g.Size},{g.Year?.ToString() ?? ""}");
                 }
@@ -162,7 +340,20 @@ public static class ImportExportCommands
 
             case "courses":
                 lines.Add("Title,Code,Duration");
-                foreach (var c in DataContext.Courses.OrderBy(c => c.Title))
+                
+                var coursesQuery = DataContext.Courses.AsQueryable();
+                
+                if (!string.IsNullOrEmpty(titleLike))
+                    coursesQuery = coursesQuery.Where(c => c.Title.Contains(titleLike, StringComparison.OrdinalIgnoreCase));
+                
+                var courses = coursesQuery
+                    .OrderBy(c => c.Title)
+                    .ToList();
+
+                if (limit.HasValue)
+                    courses = courses.Take(limit.Value).ToList();
+
+                foreach (var c in courses)
                 {
                     lines.Add($"{EscapeCsv(c.Title)},{EscapeCsv(c.Code ?? "")},{c.DurationMinutes}");
                 }

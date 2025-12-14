@@ -33,7 +33,6 @@ class Program
                 case "restore":   BackupCommands.Restore(args); break;
                 case "import":    ImportExportCommands.Run(args); break;
                 case "export":    ImportExportCommands.Run(args); break;
-                case "config":    ConfigCommand.Run(args); break;
                 case "clear":     ClearCommands.Run(); break;
 
                 default:

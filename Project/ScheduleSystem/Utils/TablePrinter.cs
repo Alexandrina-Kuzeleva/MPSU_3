@@ -1,4 +1,3 @@
-// Utils/TablePrinter.cs
 using ScheduleSystem.Models;
 using ScheduleSystem.Storage;
 

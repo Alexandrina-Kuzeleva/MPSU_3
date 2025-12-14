@@ -14,7 +14,7 @@ public static class GroupCommands
         switch (action)
         {
             case "add":     Add(args); break;
-            case "list":    List(); break;
+            case "list":    List(args); break;
             case "show":    
                 if (args.Length < 3) throw new ArgumentException("Usage: sched group show <id|code>");
                 Show(args[2]); 
@@ -50,16 +50,57 @@ public static class GroupCommands
         Console.WriteLine($"Group {group.Code} (id={group.Id}) created.");
     }
 
-    static void List()
+    static void List(string[] args)
     {
-        if (!DataContext.Groups.Any())
+        var year = ArgsParser.GetInt(args, "--year");
+        var minSize = ArgsParser.GetInt(args, "--min-size");
+        var maxSize = ArgsParser.GetInt(args, "--max-size");
+        var codeLike = ArgsParser.GetValue(args, "--code-like");
+        var sortBy = ArgsParser.GetValue(args, "--sort") ?? "code";
+        var limit = ArgsParser.GetInt(args, "--limit");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+
+        var query = DataContext.Groups.AsQueryable();
+
+        if (year.HasValue)
+            query = query.Where(g => g.Year == year);
+        
+        if (minSize.HasValue)
+            query = query.Where(g => g.Size >= minSize.Value);
+        
+        if (maxSize.HasValue)
+            query = query.Where(g => g.Size <= maxSize.Value);
+        
+        if (!string.IsNullOrEmpty(codeLike))
+            query = query.Where(g => g.Code.Contains(codeLike, StringComparison.OrdinalIgnoreCase));
+
+        query = sortBy.ToLower() switch
         {
-            Console.WriteLine("No groups.");
+            "size" => query.OrderBy(g => g.Size),
+            "year" => query.OrderBy(g => g.Year ?? int.MaxValue),
+            _ => query.OrderBy(g => g.Code)
+        };
+
+        if (reverse)
+            query = query.Reverse();
+
+        var groups = query.ToList();
+
+        if (!groups.Any())
+        {
+            Console.WriteLine("No groups found.");
             return;
         }
 
-        foreach (var g in DataContext.Groups.OrderBy(g => g.Code))
-            Console.WriteLine($"{g.Id,3} | {g.Code,-12} | {g.Size,3} students | Year {g.Year?.ToString() ?? "-"}");
+        if (limit.HasValue)
+            groups = groups.Take(limit.Value).ToList();
+
+        Console.WriteLine($"Found {groups.Count} group(s):");
+        Console.WriteLine("ID  | Code         | Size | Year");
+        Console.WriteLine(new string('-', 40));
+        
+        foreach (var g in groups)
+            Console.WriteLine($"{g.Id,3} | {g.Code,-12} | {g.Size,4} | {g.Year?.ToString() ?? "-"}");
     }
 
     static void Show(string identifier)

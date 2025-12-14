@@ -14,7 +14,7 @@ public static class CourseCommands
         switch (action)
         {
             case "add":     Add(args); break;
-            case "list":    List(); break;
+            case "list":    List(args); break;
             case "show":    if (args.Length < 3) throw new ArgumentException("Usage: sched course show <id|code>"); Show(args[2]); break;
             case "delete":  
                 if (args.Length < 3) throw new ArgumentException("Usage: sched course delete <id|code>");
@@ -47,16 +47,57 @@ public static class CourseCommands
         Console.WriteLine($"Course \"{course.Title}\" (id={course.Id}) created.");
     }
 
-    static void List()
+    static void List(string[] args)
     {
-        if (!DataContext.Courses.Any())
+        var titleLike = ArgsParser.GetValue(args, "--title-like");
+        var codeLike = ArgsParser.GetValue(args, "--code-like");
+        var minDuration = ArgsParser.GetInt(args, "--min-duration");
+        var maxDuration = ArgsParser.GetInt(args, "--max-duration");
+        var sortBy = ArgsParser.GetValue(args, "--sort") ?? "title";
+        var limit = ArgsParser.GetInt(args, "--limit");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+
+        var query = DataContext.Courses.AsQueryable();
+
+        if (!string.IsNullOrEmpty(titleLike))
+            query = query.Where(c => c.Title.Contains(titleLike, StringComparison.OrdinalIgnoreCase));
+        
+        if (!string.IsNullOrEmpty(codeLike))
+            query = query.Where(c => c.Code != null && c.Code.Contains(codeLike, StringComparison.OrdinalIgnoreCase));
+        
+        if (minDuration.HasValue)
+            query = query.Where(c => c.DurationMinutes >= minDuration.Value);
+        
+        if (maxDuration.HasValue)
+            query = query.Where(c => c.DurationMinutes <= maxDuration.Value);
+
+        query = sortBy.ToLower() switch
         {
-            Console.WriteLine("No courses.");
+            "code" => query.OrderBy(c => c.Code ?? ""),
+            "duration" => query.OrderBy(c => c.DurationMinutes),
+            _ => query.OrderBy(c => c.Title)
+        };
+
+        if (reverse)
+            query = query.Reverse();
+
+        var courses = query.ToList();
+
+        if (!courses.Any())
+        {
+            Console.WriteLine("No courses found.");
             return;
         }
 
-        foreach (var c in DataContext.Courses.OrderBy(c => c.Title))
-            Console.WriteLine($"{c.Id,3} | {c.Title,-40} | {c.Code ?? "-",-10} | {c.DurationMinutes} min");
+        if (limit.HasValue)
+            courses = courses.Take(limit.Value).ToList();
+
+        Console.WriteLine($"Found {courses.Count} course(s):");
+        Console.WriteLine("ID  | Title                                   | Code      | Duration");
+        Console.WriteLine(new string('-', 80));
+        
+        foreach (var c in courses)
+            Console.WriteLine($"{c.Id,3} | {c.Title,-40} | {c.Code ?? "-",-9} | {c.DurationMinutes,8} min");
     }
 
     static void Show(string identifier)
