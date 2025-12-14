@@ -15,8 +15,18 @@ public static class GroupCommands
         {
             case "add":     Add(args); break;
             case "list":    List(); break;
-            case "show":    Show(int.Parse(args[2])); break;
-            case "delete":  Delete(int.Parse(args[2])); break;
+            case "show":    
+                if (args.Length < 3) throw new ArgumentException("Usage: sched group show <id|code>");
+                Show(args[2]); 
+                break;
+            case "delete":  
+                if (args.Length < 3) throw new ArgumentException("Usage: sched group delete <id|code>");
+                Delete(args[2]); 
+                break;
+            case "update":
+                if (args.Length < 3) throw new ArgumentException("Usage: sched group update <id> [--code new] [--size new] [--year new]");
+                Update(args[2]);
+                break;
             default: throw new ArgumentException($"Unknown group action: {action}");
         }
     }
@@ -52,24 +62,81 @@ public static class GroupCommands
             Console.WriteLine($"{g.Id,3} | {g.Code,-12} | {g.Size,3} students | Year {g.Year?.ToString() ?? "-"}");
     }
 
-    static void Show(int id)
+    static void Show(string identifier)
     {
-        var g = DataContext.Groups.FirstOrDefault(x => x.Id == id)
-                ?? throw new KeyNotFoundException($"Group {id} not found");
+        Group? group = null;
 
-        Console.WriteLine($"ID: {g.Id}");
-        Console.WriteLine($"Code: {g.Code}");
-        Console.WriteLine($"Size: {g.Size}");
-        Console.WriteLine($"Year: {g.Year?.ToString() ?? "—"}");
+        if (int.TryParse(identifier, out int id))
+        {
+            group = DataContext.Groups.FirstOrDefault(g => g.Id == id);
+        }
+
+        if (group == null)
+        {
+            group = DataContext.Groups.FirstOrDefault(g => 
+                g.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (group == null)
+        {
+            throw new KeyNotFoundException($"Group not found: '{identifier}' (neither ID nor code)");
+        }
+
+        Console.WriteLine($"ID: {group.Id}");
+        Console.WriteLine($"Code: {group.Code}");
+        Console.WriteLine($"Size: {group.Size}");
+        Console.WriteLine($"Year: {group.Year?.ToString() ?? "—"}");
     }
 
-    static void Delete(int id)
+    static void Update(string identifier)
     {
-        var g = DataContext.Groups.FirstOrDefault(x => x.Id == id)
-                ?? throw new KeyNotFoundException($"Group {id} not found");
+        Group? group = null;
+        if (int.TryParse(identifier, out int id))
+        {
+            group = DataContext.Groups.FirstOrDefault(g => g.Id == id);
+        }
+        if (group == null)
+        {
+            group = DataContext.Groups.FirstOrDefault(g => g.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+        }
+        if (group == null)
+            throw new KeyNotFoundException($"Group not found: '{identifier}'");
 
-        DataContext.Groups.Remove(g);
+        var newCode = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--code");
+        var newSizeStr = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--size");
+        var newYearStr = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--year");
+
+        if (newCode != null) group = group with { Code = newCode };
+        if (int.TryParse(newSizeStr, out int newSize)) group = group with { Size = newSize };
+        if (int.TryParse(newYearStr, out int newYear)) group = group with { Year = newYear };
+        else if (newYearStr == "") group = group with { Year = null }; // чтобы сбросить year
+
         DataContext.SaveAll();
-        Console.WriteLine($"Group {g.Code} deleted.");
+        Console.WriteLine($"Group {group.Code} (id={group.Id}) updated.");
+    }
+
+    static void Delete(string identifier)
+    {
+        Group? group = null;
+
+        if (int.TryParse(identifier, out int id))
+        {
+            group = DataContext.Groups.FirstOrDefault(g => g.Id == id);
+        }
+
+        if (group == null)
+        {
+            group = DataContext.Groups.FirstOrDefault(g => 
+                g.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (group == null)
+        {
+            throw new KeyNotFoundException($"Group not found: '{identifier}' (neither ID nor code)");
+        }
+
+        DataContext.Groups.Remove(group);
+        DataContext.SaveAll();
+        Console.WriteLine($"Group {group.Code} deleted.");
     }
 }

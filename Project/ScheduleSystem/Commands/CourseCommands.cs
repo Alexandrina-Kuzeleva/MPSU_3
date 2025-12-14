@@ -15,8 +15,15 @@ public static class CourseCommands
         {
             case "add":     Add(args); break;
             case "list":    List(); break;
-            case "show":    Show(int.Parse(args[2])); break;
-            case "delete":  Delete(int.Parse(args[2])); break;
+            case "show":    if (args.Length < 3) throw new ArgumentException("Usage: sched course show <id|code>"); Show(args[2]); break;
+            case "delete":  
+                if (args.Length < 3) throw new ArgumentException("Usage: sched course delete <id|code>");
+                Delete(args[2]); 
+                break;
+            case "update":
+                if (args.Length < 3) throw new ArgumentException("Usage: sched course update <id> [--title new] [--code new] [--duration N]");
+                Update(args[2]);
+                break;
             default: throw new ArgumentException($"Unknown course action: {action}");
         }
     }
@@ -52,24 +59,81 @@ public static class CourseCommands
             Console.WriteLine($"{c.Id,3} | {c.Title,-40} | {c.Code ?? "-",-10} | {c.DurationMinutes} min");
     }
 
-    static void Show(int id)
+    static void Show(string identifier)
     {
-        var c = DataContext.Courses.FirstOrDefault(x => x.Id == id)
-                ?? throw new KeyNotFoundException($"Course {id} not found");
+        Course? course = null;
 
-        Console.WriteLine($"ID: {c.Id}");
-        Console.WriteLine($"Title: {c.Title}");
-        Console.WriteLine($"Code: {c.Code ?? "—"}");
-        Console.WriteLine($"Duration: {c.DurationMinutes} minutes");
+        if (int.TryParse(identifier, out int id))
+        {
+            course = DataContext.Courses.FirstOrDefault(c => c.Id == id);
+        }
+
+        if (course == null)
+        {
+            course = DataContext.Courses.FirstOrDefault(c => 
+                c.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (course == null)
+        {
+            throw new KeyNotFoundException($"Course not found: '{identifier}' (neither ID nor code)");
+        }
+
+        Console.WriteLine($"ID: {course.Id}");
+        Console.WriteLine($"Title: {course.Title}");
+        Console.WriteLine($"Code: {course.Code ?? "—"}");
+        Console.WriteLine($"Duration: {course.DurationMinutes} minutes");
     }
 
-    static void Delete(int id)
+    static void Update(string identifier)
     {
-        var c = DataContext.Courses.FirstOrDefault(x => x.Id == id)
-                ?? throw new KeyNotFoundException($"Course {id} not found");
+        Course? course = null;
+        if (int.TryParse(identifier, out int id))
+        {
+            course = DataContext.Courses.FirstOrDefault(c => c.Id == id);
+        }
+        if (course == null && !string.IsNullOrEmpty(identifier))
+        {
+            course = DataContext.Courses.FirstOrDefault(c => 
+                c.Code != null && c.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+        }
+        if (course == null)
+            throw new KeyNotFoundException($"Course not found: '{identifier}'");
 
-        DataContext.Courses.Remove(c);
+        var newTitle = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--title");
+        var newCode = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--code");
+        var newDurationStr = ArgsParser.GetValue(Environment.GetCommandLineArgs(), "--duration");
+
+        if (newTitle != null) course = course with { Title = newTitle };
+        if (newCode != null) course = course with { Code = newCode };
+        if (int.TryParse(newDurationStr, out int newDuration)) course = course with { DurationMinutes = newDuration };
+
         DataContext.SaveAll();
-        Console.WriteLine($"Course \"{c.Title}\" deleted.");
+        Console.WriteLine($"Course \"{course.Title}\" (id={course.Id}) updated.");
+    }
+
+    static void Delete(string identifier)
+    {
+        Course? course = null;
+
+        if (int.TryParse(identifier, out int id))
+        {
+            course = DataContext.Courses.FirstOrDefault(c => c.Id == id);
+        }
+
+        if (course == null)
+        {
+            course = DataContext.Courses.FirstOrDefault(c => 
+                c.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (course == null)
+        {
+            throw new KeyNotFoundException($"Course not found: '{identifier}' (neither ID nor code)");
+        }
+
+        DataContext.Courses.Remove(course);
+        DataContext.SaveAll();
+        Console.WriteLine($"Course \"{course.Title}\" deleted.");
     }
 }
