@@ -23,7 +23,6 @@ public abstract class TestBase : IDisposable
         DataContext.Groups = new List<ScheduleSystem.Models.Group>();
         DataContext.Courses = new List<ScheduleSystem.Models.Course>();
         DataContext.Sessions = new List<ScheduleSystem.Models.Session>();
-        DataContext.Users = new List<ScheduleSystem.Models.User>();
         
         try
         {

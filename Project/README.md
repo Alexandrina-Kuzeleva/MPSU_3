@@ -8,7 +8,7 @@
 * Формирование отчётов (по группам, преподавателям, аудиториям, датам)
 
 ---
-## ScheduleSystem
+## /ScheduleSystem
 
 ## Сборка и установка
 
@@ -165,7 +165,7 @@ sched report week --group 1 --from 2025-11-24 --to 2025-11-30
 |   5 | Ошибка файла        | Файл не найден                   |
 
 ---
-## ScheduleSystem.Tests
+## /ScheduleSystem.Tests
 ## Тестирование
 
 ```bash
