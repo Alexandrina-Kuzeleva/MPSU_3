@@ -2,7 +2,6 @@ using ScheduleSystem.Models;
 using ScheduleSystem.Storage;
 using ScheduleSystem.Utils;
 
-
 namespace ScheduleSystem.Commands;
 
 public static class ClearCommands
@@ -13,7 +12,9 @@ public static class ClearCommands
 
         if (!Directory.Exists(path))
         {
-            Console.WriteLine($"База данных уже пуста (папка не существует: {path})");
+            Console.WriteLine(
+                $"Database is already empty (folder does not exist: {path})"
+            );
             return;
         }
 
@@ -22,18 +23,16 @@ public static class ClearCommands
             Directory.Delete(path, recursive: true);
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine();
-            Console.WriteLine("       DATABASE CLEARED");
-            Console.WriteLine($"       Папка удалена: {Path.GetFullPath(path)}");
-            Console.WriteLine("       Все данные стёрты без возможности восстановления!");
-            Console.WriteLine();
-            Console.ResetColor();
-            Console.WriteLine("Готово! Теперь можно запустить:");
-            Console.WriteLine("   dotnet run -- init");
+            Console.WriteLine("DATABASE CLEARED");
+            Console.WriteLine($"Folder deleted: {Path.GetFullPath(path)}");
+            Console.WriteLine(
+                "All data has been permanently erased with no recovery option!"
+            );
         }
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Ошибка при удалении: {ex.Message}");
+            Console.WriteLine($"Error while deleting: {ex.Message}");
             Console.ResetColor();
         }
     }

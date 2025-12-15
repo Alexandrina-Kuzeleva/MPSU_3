@@ -39,7 +39,9 @@ public static class RecurrenceService
 
             var (conflict, msg) = ConflictService.Check(session);
             if (conflict)
-                throw new InvalidOperationException($"Cannot create recurring session on {current:yyyy-MM-dd}: {msg}");
+                throw new InvalidOperationException(
+                    $"Cannot create recurring session on {current:yyyy-MM-dd}: {msg}"
+                );
 
             sessions.Add(session);
             current = current.AddDays(7);

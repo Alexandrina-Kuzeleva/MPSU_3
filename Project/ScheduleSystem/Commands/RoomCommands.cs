@@ -8,7 +8,10 @@ public static class RoomCommands
 {
     public static void Run(string[] args)
     {
-        if (args.Length < 2) throw new ArgumentException("Usage: sched room <add|list|show|update|delete>");
+        if (args.Length < 2) 
+            throw new ArgumentException(
+                "Usage: sched room <add|list|show|update|delete>"
+            );
 
         var action = args[1].ToLower();
         switch (action)
@@ -16,18 +19,28 @@ public static class RoomCommands
             case "add":     Add(args); break;
             case "list":    List(args); break;
             case "show":    
-                if (args.Length < 3) throw new ArgumentException("Usage: sched room show <id|code>");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched room show <id|code>"
+                    );
                 Show(args[2]); 
                 break;
             case "delete":  
-                if (args.Length < 3) throw new ArgumentException("Usage: sched room delete <id|code>");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched room delete <id|code>"
+                    );
                 Delete(args[2]); 
                 break;
             case "update":
-                if (args.Length < 3) throw new ArgumentException("Usage: sched room update <id|code> [--code new] [--capacity N] [--building B]");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched room update <id|code> [--code new] "+
+                        "[--capacity N] [--building B]");
                 Update(args[2], args);
                 break;
-            default: throw new ArgumentException($"Unknown room action: {action}");
+            default: 
+                throw new ArgumentException($"Unknown room action: {action}");
         }
     }
 
@@ -41,7 +54,8 @@ public static class RoomCommands
             return;
         }
 
-        var code = ArgsParser.GetValue(args, "--code") ?? throw new ArgumentException("Missing --code");
+        var code = ArgsParser.GetValue(args, "--code") ?? 
+            throw new ArgumentException("Missing --code");
         var capacity = int.Parse(ArgsParser.GetValue(args, "--capacity") ?? "0");
         var building = ArgsParser.GetValue(args, "--building");
 
@@ -117,12 +131,14 @@ public static class RoomCommands
         var codeLike = ArgsParser.GetValue(args, "--code-like");
         var sortBy = ArgsParser.GetValue(args, "--sort") ?? "code";
         var limit = ArgsParser.GetInt(args, "--limit");
-        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || 
+            ArgsParser.HasFlag(args, "--desc");
 
         var query = DataContext.Rooms.AsQueryable();
 
         if (!string.IsNullOrEmpty(building))
-            query = query.Where(r => r.Building != null && r.Building.Contains(building, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(r => r.Building != null && 
+                r.Building.Contains(building, StringComparison.OrdinalIgnoreCase));
         
         if (minCapacity.HasValue)
             query = query.Where(r => r.Capacity >= minCapacity.Value);
@@ -131,7 +147,8 @@ public static class RoomCommands
             query = query.Where(r => r.Capacity <= maxCapacity.Value);
         
         if (!string.IsNullOrEmpty(codeLike))
-            query = query.Where(r => r.Code.Contains(codeLike, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(r => 
+                r.Code.Contains(codeLike, StringComparison.OrdinalIgnoreCase));
 
         query = sortBy.ToLower() switch
         {
@@ -179,7 +196,9 @@ public static class RoomCommands
 
         if (room == null)
         {
-            throw new KeyNotFoundException($"Room not found: '{identifier}' (neither ID nor code)");
+            throw new KeyNotFoundException(
+                $"Room not found: '{identifier}' (neither ID nor code)"
+            );
         }
 
         Console.WriteLine($"Room: {room.Code} (id={room.Id})");
@@ -196,7 +215,8 @@ public static class RoomCommands
         }
         if (room == null)
         {
-            room = DataContext.Rooms.FirstOrDefault(r => r.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            room = DataContext.Rooms.FirstOrDefault(r => 
+                r.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
         }
         if (room == null)
             throw new KeyNotFoundException($"Room not found: '{identifier}'");
@@ -208,7 +228,8 @@ public static class RoomCommands
         var updatedRoom = new Room(
             Id: room.Id,
             Code: newCode ?? room.Code,
-            Capacity: int.TryParse(newCapacityStr, out int capacity) ? capacity : room.Capacity,
+            Capacity: int.TryParse(newCapacityStr, out int capacity) ? 
+                capacity : room.Capacity,
             Building: newBuilding ?? room.Building,
             AttributesJson: room.AttributesJson
         );
@@ -236,7 +257,9 @@ public static class RoomCommands
 
         if (room == null)
         {
-            throw new KeyNotFoundException($"Room not found: '{identifier}' (neither ID nor code)");
+            throw new KeyNotFoundException(
+                $"Room not found: '{identifier}' (neither ID nor code)"
+            );
         }
 
         DataContext.Rooms.Remove(room);

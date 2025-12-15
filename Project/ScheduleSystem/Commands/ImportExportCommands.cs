@@ -9,7 +9,10 @@ public static class ImportExportCommands
 {
     public static void Run(string[] args)
     {
-        if (args.Length < 2) throw new ArgumentException("Usage: sched <import|export> <csv|json> ...");
+        if (args.Length < 2)
+            throw new ArgumentException(
+                "Usage: sched <import|export> <csv|json> ..."
+            );
 
         var action = args[0].ToLower();
         var format = args[1].ToLower();
@@ -35,8 +38,10 @@ public static class ImportExportCommands
 
     private static void ImportCsv(string[] args)
     {
-        var filePath = ArgsParser.GetValue(args, "--file") ?? throw new ArgumentException("Missing --file");
-        var entity = ArgsParser.GetValue(args, "--entity") ?? throw new ArgumentException("Missing --entity");
+        var filePath = ArgsParser.GetValue(args, "--file") ?? 
+            throw new ArgumentException("Missing --file");
+        var entity = ArgsParser.GetValue(args, "--entity") ?? 
+            throw new ArgumentException("Missing --entity");
         var mode = ArgsParser.GetValue(args, "--mode") ?? "append";
         var force = ArgsParser.HasFlag(args, "--force");
 
@@ -54,7 +59,8 @@ public static class ImportExportCommands
             return;
         }
 
-        var dataLines = lines.Skip(1).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+        var dataLines = lines.Skip(1).Where(l => 
+            !string.IsNullOrWhiteSpace(l)).ToList();
 
         switch (entity.ToLower())
         {
@@ -66,15 +72,21 @@ public static class ImportExportCommands
                     try
                     {
                         var v = ParseCsvLine(line);
-                        if (v.Length < 6) throw new Exception("Not enough columns");
-                        if (string.IsNullOrWhiteSpace(v[2])) throw new Exception();
-                        if (string.IsNullOrWhiteSpace(v[3])) throw new Exception();
-                        if (string.IsNullOrWhiteSpace(v[4])) throw new Exception();
-                        if (string.IsNullOrWhiteSpace(v[5])) throw new Exception();
+                        if (v.Length < 6) 
+                            throw new Exception("Not enough columns");
+                        if (string.IsNullOrWhiteSpace(v[2])) 
+                            throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[3])) 
+                            throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[4])) 
+                            throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[5])) 
+                            throw new Exception();
 
                         var date = DateOnly.Parse(v[0]);
                         var time = v[1].Split('-');
-                        if (time.Length != 2) throw new Exception("Invalid time format");
+                        if (time.Length != 2) 
+                            throw new Exception("Invalid time format");
 
                         var session = new Session(
                             Id: DataContext.NextId<Session>(),
@@ -122,8 +134,10 @@ public static class ImportExportCommands
                     try
                     {
                         var v = ParseCsvLine(line);
-                        if (string.IsNullOrWhiteSpace(v[0])) throw new Exception();
-                        if (!int.TryParse(v[1], out int cap) || cap <= 0) throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[0])) 
+                            throw new Exception();
+                        if (!int.TryParse(v[1], out int cap) || cap <= 0) 
+                            throw new Exception();
                         if (DataContext.Rooms.Any(r =>
                             r.Code.Equals(v[0], StringComparison.OrdinalIgnoreCase)))
                             throw new Exception();
@@ -152,9 +166,11 @@ public static class ImportExportCommands
                     try
                     {
                         var v = ParseCsvLine(line);
-                        if (string.IsNullOrWhiteSpace(v[0])) throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[0])) 
+                            throw new Exception();
 
-                        if (v.Length > 1 && !string.IsNullOrEmpty(v[1]) && !v[1].Contains("@"))
+                        if (v.Length > 1 && !string.IsNullOrEmpty(v[1]) && 
+                            !v[1].Contains("@"))
                             throw new Exception();
 
                         DataContext.Teachers.Add(new Teacher(
@@ -180,9 +196,12 @@ public static class ImportExportCommands
                     try
                     {
                         var v = ParseCsvLine(line);
-                        if (string.IsNullOrWhiteSpace(v[0])) throw new Exception();
-                        if (!int.TryParse(v[1], out int size) || size <= 0) throw new Exception();
-                        if (!int.TryParse(v[2], out int year)) throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[0])) 
+                            throw new Exception();
+                        if (!int.TryParse(v[1], out int size) || size <= 0) 
+                            throw new Exception();
+                        if (!int.TryParse(v[2], out int year)) 
+                            throw new Exception();
 
                         DataContext.Groups.Add(new Group(
                             DataContext.NextId<Group>(),
@@ -208,9 +227,12 @@ public static class ImportExportCommands
                     try
                     {
                         var v = ParseCsvLine(line);
-                        if (string.IsNullOrWhiteSpace(v[0])) throw  new Exception();
-                        if (string.IsNullOrWhiteSpace(v[1])) throw  new Exception();
-                        if (!int.TryParse(v[2], out int dur)) throw  new Exception();
+                        if (string.IsNullOrWhiteSpace(v[0])) 
+                            throw  new Exception();
+                        if (string.IsNullOrWhiteSpace(v[1])) 
+                            throw  new Exception();
+                        if (!int.TryParse(v[2], out int dur)) 
+                            throw  new Exception();
 
                         DataContext.Courses.Add(new Course(
                             DataContext.NextId<Course>(),
@@ -238,8 +260,10 @@ public static class ImportExportCommands
 
     private static void ExportCsv(string[] args)
     {
-        var outPath = ArgsParser.GetValue(args, "--out") ?? throw new ArgumentException("Missing --out");
-        var entity = ArgsParser.GetValue(args, "--entity") ?? throw new ArgumentException("Missing --entity");
+        var outPath = ArgsParser.GetValue(args, "--out") ?? 
+            throw new ArgumentException("Missing --out");
+        var entity = ArgsParser.GetValue(args, "--entity") ?? 
+            throw new ArgumentException("Missing --entity");
         var fromStr = ArgsParser.GetValue(args, "--from");
         var toStr = ArgsParser.GetValue(args, "--to");
         var building = ArgsParser.GetValue(args, "--building");
@@ -262,8 +286,10 @@ public static class ImportExportCommands
                 
                 var sessionsQuery = DataContext.Sessions.AsQueryable();
                 
-                if (from.HasValue) sessionsQuery = sessionsQuery.Where(s => s.Date >= from.Value);
-                if (to.HasValue) sessionsQuery = sessionsQuery.Where(s => s.Date <= to.Value);
+                if (from.HasValue) 
+                    sessionsQuery = sessionsQuery.Where(s => s.Date >= from.Value);
+                if (to.HasValue) 
+                    sessionsQuery = sessionsQuery.Where(s => s.Date <= to.Value);
                 
                 var sessions = sessionsQuery
                     .OrderBy(s => s.Date)
@@ -275,12 +301,18 @@ public static class ImportExportCommands
 
                 foreach (var s in sessions)
                 {
-                    var course = DataContext.Courses.FirstOrDefault(c => c.Id == s.CourseId)?.Title ?? "";
-                    var teacher = DataContext.Teachers.FirstOrDefault(t => t.Id == s.TeacherId)?.Name ?? "";
-                    var group = DataContext.Groups.FirstOrDefault(g => g.Id == s.GroupId)?.Code ?? "";
-                    var room = DataContext.Rooms.FirstOrDefault(r => r.Id == s.RoomId)?.Code ?? "";
+                    var course = DataContext.Courses
+                        .FirstOrDefault(c => c.Id == s.CourseId)?.Title ?? "";
+                    var teacher = DataContext.Teachers
+                        .FirstOrDefault(t => t.Id == s.TeacherId)?.Name ?? "";
+                    var group = DataContext.Groups
+                        .FirstOrDefault(g => g.Id == s.GroupId)?.Code ?? "";
+                    var room = DataContext.Rooms
+                        .FirstOrDefault(r => r.Id == s.RoomId)?.Code ?? "";
 
-                    lines.Add($"{s.Date:yyyy-MM-dd},{s.TimeRange},{EscapeCsv(course)},{EscapeCsv(teacher)},{EscapeCsv(group)},{EscapeCsv(room)},{EscapeCsv(s.Notes)}");
+                    lines.Add($"{s.Date:yyyy-MM-dd},{s.TimeRange}," +
+                        $"{EscapeCsv(course)},{EscapeCsv(teacher)}," +
+                        $"{EscapeCsv(group)},{EscapeCsv(room)},{EscapeCsv(s.Notes)}");
                 }
                 break;
 
@@ -290,11 +322,14 @@ public static class ImportExportCommands
                 var roomsQuery = DataContext.Rooms.AsQueryable();
                 
                 if (!string.IsNullOrEmpty(building))
-                    roomsQuery = roomsQuery.Where(r => r.Building != null && r.Building.Contains(building, StringComparison.OrdinalIgnoreCase));
+                    roomsQuery = roomsQuery.Where(r => r.Building != null && 
+                        r.Building.Contains(building, StringComparison.OrdinalIgnoreCase));
                 if (minCapacity.HasValue)
-                    roomsQuery = roomsQuery.Where(r => r.Capacity >= minCapacity.Value);
+                    roomsQuery = roomsQuery.Where(r => 
+                        r.Capacity >= minCapacity.Value);
                 if (maxCapacity.HasValue)
-                    roomsQuery = roomsQuery.Where(r => r.Capacity <= maxCapacity.Value);
+                    roomsQuery = roomsQuery.Where(r => 
+                        r.Capacity <= maxCapacity.Value);
                 
                 var rooms = roomsQuery
                     .OrderBy(r => r.Code)
@@ -305,7 +340,9 @@ public static class ImportExportCommands
 
                 foreach (var r in rooms)
                 {
-                    lines.Add($"{EscapeCsv(r.Code)},{r.Capacity},{EscapeCsv(r.Building ?? "")},{EscapeCsv(r.AttributesJson ?? "")}");
+                    lines.Add($"{EscapeCsv(r.Code)},{r.Capacity}," +
+                        $"{EscapeCsv(r.Building ?? "")}," +
+                        $"{EscapeCsv(r.AttributesJson ?? "")}");
                 }
                 break;
 
@@ -315,7 +352,8 @@ public static class ImportExportCommands
                 var teachersQuery = DataContext.Teachers.AsQueryable();
                 
                 if (!string.IsNullOrEmpty(nameLike))
-                    teachersQuery = teachersQuery.Where(t => t.Name.Contains(nameLike, StringComparison.OrdinalIgnoreCase));
+                    teachersQuery = teachersQuery.Where(t => 
+                        t.Name.Contains(nameLike, StringComparison.OrdinalIgnoreCase));
                 
                 var teachers = teachersQuery
                     .OrderBy(t => t.Name)
@@ -347,7 +385,8 @@ public static class ImportExportCommands
 
                 foreach (var g in groups)
                 {
-                    lines.Add($"{EscapeCsv(g.Code)},{g.Size},{g.Year?.ToString() ?? ""}");
+                    lines.Add($"{EscapeCsv(g.Code)},{g.Size}," +
+                        $"{g.Year?.ToString() ?? ""}");
                 }
                 break;
 
@@ -357,7 +396,8 @@ public static class ImportExportCommands
                 var coursesQuery = DataContext.Courses.AsQueryable();
                 
                 if (!string.IsNullOrEmpty(titleLike))
-                    coursesQuery = coursesQuery.Where(c => c.Title.Contains(titleLike, StringComparison.OrdinalIgnoreCase));
+                    coursesQuery = coursesQuery.Where(c => 
+                        c.Title.Contains(titleLike, StringComparison.OrdinalIgnoreCase));
                 
                 var courses = coursesQuery
                     .OrderBy(c => c.Title)
@@ -368,7 +408,8 @@ public static class ImportExportCommands
 
                 foreach (var c in courses)
                 {
-                    lines.Add($"{EscapeCsv(c.Title)},{EscapeCsv(c.Code ?? "")},{c.DurationMinutes}");
+                    lines.Add($"{EscapeCsv(c.Title)}," +
+                        $"{EscapeCsv(c.Code ?? "")},{c.DurationMinutes}");
                 }
                 break;
 
@@ -377,12 +418,14 @@ public static class ImportExportCommands
         }
 
         File.WriteAllLines(outPath, lines);
-        Console.WriteLine($"Exported {lines.Count - 1} {entity} to {Path.GetFullPath(outPath)}");
+        Console.WriteLine($"Exported {lines.Count - 1} {entity} to " +
+            $"{Path.GetFullPath(outPath)}");
     }
 
     private static void ImportJson(string[] args)
     {
-        var filePath = ArgsParser.GetValue(args, "--file") ?? throw new ArgumentException("Missing --file");
+        var filePath = ArgsParser.GetValue(args, "--file") ?? 
+            throw new ArgumentException("Missing --file");
         
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"File not found: {filePath}");
@@ -402,7 +445,8 @@ public static class ImportExportCommands
 
     private static void ExportJson(string[] args)
     {
-        var outPath = ArgsParser.GetValue(args, "--out") ?? throw new ArgumentException("Missing --out");
+        var outPath = ArgsParser.GetValue(args, "--out") ?? 
+            throw new ArgumentException("Missing --out");
         var entity = ArgsParser.GetValue(args, "--entity");
 
         if (string.IsNullOrEmpty(entity))
@@ -417,36 +461,47 @@ public static class ImportExportCommands
 
     private static void ImportPartialJson(string entity, string json)
     {
-        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new System.Text.Json.JsonSerializerOptions 
+            { PropertyNameCaseInsensitive = true };
 
         switch (entity.ToLower())
         {
             case "sessions":
-                var sessions = System.Text.Json.JsonSerializer.Deserialize<List<Session>>(json, options) ?? new();
+                var sessions = System.Text.Json.JsonSerializer
+                    .Deserialize<List<Session>>(json, options) ?? new();
                 foreach (var session in sessions)
                 {
-                    DataContext.Sessions.Add(session with { Id = DataContext.NextId<Session>() });
+                    DataContext.Sessions.Add(session with 
+                        { Id = DataContext.NextId<Session>() });
                 }
                 break;
 
             case "rooms":
-                var rooms = System.Text.Json.JsonSerializer.Deserialize<List<Room>>(json, options) ?? new();
-                DataContext.Rooms.AddRange(rooms.Select(r => r with { Id = DataContext.NextId<Room>() }));
+                var rooms = System.Text.Json.JsonSerializer
+                    .Deserialize<List<Room>>(json, options) ?? new();
+                DataContext.Rooms.AddRange(rooms.Select(r => 
+                    r with { Id = DataContext.NextId<Room>() }));
                 break;
 
             case "teachers":
-                var teachers = System.Text.Json.JsonSerializer.Deserialize<List<Teacher>>(json, options) ?? new();
-                DataContext.Teachers.AddRange(teachers.Select(t => t with { Id = DataContext.NextId<Teacher>() }));
+                var teachers = System.Text.Json.JsonSerializer
+                    .Deserialize<List<Teacher>>(json, options) ?? new();
+                DataContext.Teachers.AddRange(teachers.Select(t => 
+                    t with { Id = DataContext.NextId<Teacher>() }));
                 break;
 
             case "groups":
-                var groups = System.Text.Json.JsonSerializer.Deserialize<List<Group>>(json, options) ?? new();
-                DataContext.Groups.AddRange(groups.Select(g => g with { Id = DataContext.NextId<Group>() }));
+                var groups = System.Text.Json.JsonSerializer
+                    .Deserialize<List<Group>>(json, options) ?? new();
+                DataContext.Groups.AddRange(groups.Select(g => 
+                    g with { Id = DataContext.NextId<Group>() }));
                 break;
 
             case "courses":
-                var courses = System.Text.Json.JsonSerializer.Deserialize<List<Course>>(json, options) ?? new();
-                DataContext.Courses.AddRange(courses.Select(c => c with { Id = DataContext.NextId<Course>() }));
+                var courses = System.Text.Json.JsonSerializer
+                    .Deserialize<List<Course>>(json, options) ?? new();
+                DataContext.Courses.AddRange(courses.Select(c => 
+                    c with { Id = DataContext.NextId<Course>() }));
                 break;
 
             default:
@@ -469,7 +524,8 @@ public static class ImportExportCommands
             _ => throw new ArgumentException($"Unknown entity: {entity}")
         };
 
-        var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+        var options = new System.Text.Json.JsonSerializerOptions 
+            { WriteIndented = true };
         var json = System.Text.Json.JsonSerializer.Serialize(data, options);
         File.WriteAllText(outPath, json);
 
@@ -483,7 +539,8 @@ public static class ImportExportCommands
             _ => 0
         };
 
-        Console.WriteLine($"Exported {count} {entity} to {Path.GetFullPath(outPath)}");
+        Console.WriteLine($"Exported {count} {entity} to " +
+            $"{Path.GetFullPath(outPath)}");
     }
 
     private static string[] ParseCsvLine(string line)
@@ -518,7 +575,8 @@ public static class ImportExportCommands
     private static string EscapeCsv(string value)
     {
         if (string.IsNullOrEmpty(value)) return "";
-        if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+        if (value.Contains(',') || value.Contains('"') || 
+            value.Contains('\n') || value.Contains('\r'))
         {
             return $"\"{value.Replace("\"", "\"\"")}\"";
         }
@@ -527,7 +585,8 @@ public static class ImportExportCommands
 
     private static int GetOrCreateCourseId(string title)
     {
-        var course = DataContext.Courses.FirstOrDefault(c => c.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+        var course = DataContext.Courses.FirstOrDefault(c => 
+            c.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
         if (course != null) return course.Id;
 
         var newCourse = new Course(
@@ -542,7 +601,8 @@ public static class ImportExportCommands
 
     private static int GetOrCreateTeacherId(string name)
     {
-        var teacher = DataContext.Teachers.FirstOrDefault(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        var teacher = DataContext.Teachers.FirstOrDefault(t => 
+            t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         if (teacher != null) return teacher.Id;
 
         var newTeacher = new Teacher(
@@ -556,7 +616,8 @@ public static class ImportExportCommands
 
     private static int GetOrCreateGroupId(string code)
     {
-        var group = DataContext.Groups.FirstOrDefault(g => g.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+        var group = DataContext.Groups.FirstOrDefault(g => 
+            g.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
         if (group != null) return group.Id;
 
         var newGroup = new Group(
@@ -571,7 +632,8 @@ public static class ImportExportCommands
 
     private static int GetOrCreateRoomId(string code)
     {
-        var room = DataContext.Rooms.FirstOrDefault(r => r.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+        var room = DataContext.Rooms.FirstOrDefault(r => 
+            r.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
         if (room != null) return room.Id;
 
         var newRoom = new Room(

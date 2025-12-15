@@ -16,18 +16,29 @@ public static class GroupCommands
             case "add":     Add(args); break;
             case "list":    List(args); break;
             case "show":    
-                if (args.Length < 3) throw new ArgumentException("Usage: sched group show <id|code>");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched group show <id|code>"
+                    );
                 Show(args[2]); 
                 break;
             case "delete":  
-                if (args.Length < 3) throw new ArgumentException("Usage: sched group delete <id|code>");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched group delete <id|code>"
+                    );
                 Delete(args[2]); 
                 break;
             case "update":
-                if (args.Length < 3) throw new ArgumentException("Usage: sched group update <id> [--code new] [--size new] [--year new]");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched group update <id> [--code new]" +
+                        "[--size new] [--year new]"
+                    );
                 Update(args[2],args);
                 break;
-            default: throw new ArgumentException($"Unknown group action: {action}");
+            default: 
+                throw new ArgumentException($"Unknown group action: {action}");
         }
     }
 
@@ -41,7 +52,8 @@ public static class GroupCommands
             return;
         }
 
-        var code = ArgsParser.GetValue(args, "--code") ?? throw new ArgumentException("Missing --code");
+        var code = ArgsParser.GetValue(args, "--code") ?? 
+            throw new ArgumentException("Missing --code");
         var size = int.Parse(ArgsParser.GetValue(args, "--size") ?? "0");
         var year = ArgsParser.GetInt(args, "--year");
 
@@ -85,7 +97,8 @@ public static class GroupCommands
             Console.Write("Year (optional, e.g., 2025): ");
             var yearStr = Console.ReadLine();
             int? year = null;
-            if (!string.IsNullOrWhiteSpace(yearStr) && int.TryParse(yearStr, out int yearVal))
+            if (!string.IsNullOrWhiteSpace(yearStr) && 
+                int.TryParse(yearStr, out int yearVal))
                 year = yearVal;
             
             var group = new Group(
@@ -114,7 +127,8 @@ public static class GroupCommands
         var codeLike = ArgsParser.GetValue(args, "--code-like");
         var sortBy = ArgsParser.GetValue(args, "--sort") ?? "code";
         var limit = ArgsParser.GetInt(args, "--limit");
-        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || 
+            ArgsParser.HasFlag(args, "--desc");
 
         var query = DataContext.Groups.AsQueryable();
 
@@ -128,7 +142,9 @@ public static class GroupCommands
             query = query.Where(g => g.Size <= maxSize.Value);
         
         if (!string.IsNullOrEmpty(codeLike))
-            query = query.Where(g => g.Code.Contains(codeLike, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(g => g.Code.Contains(
+                codeLike, StringComparison.OrdinalIgnoreCase
+            ));
 
         query = sortBy.ToLower() switch
         {
@@ -156,7 +172,9 @@ public static class GroupCommands
         Console.WriteLine(new string('-', 40));
         
         foreach (var g in groups)
-            Console.WriteLine($"{g.Id,3} | {g.Code,-12} | {g.Size,4} | {g.Year?.ToString() ?? "-"}");
+            Console.WriteLine(
+                $"{g.Id,3} | {g.Code,-12} | {g.Size,4} | {g.Year?.ToString() ?? "-"}"
+            );
     }
 
     static void Show(string identifier)
@@ -176,7 +194,9 @@ public static class GroupCommands
 
         if (group == null)
         {
-            throw new KeyNotFoundException($"Group not found: '{identifier}' (neither ID nor code)");
+            throw new KeyNotFoundException(
+                $"Group not found: '{identifier}' (neither ID nor code)"
+            );
         }
 
         Console.WriteLine($"ID: {group.Id}");
@@ -194,7 +214,9 @@ public static class GroupCommands
         }
         if (group == null)
         {
-            group = DataContext.Groups.FirstOrDefault(g => g.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            group = DataContext.Groups.FirstOrDefault(
+                g => g.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase
+            ));
         }
         if (group == null)
             throw new KeyNotFoundException($"Group not found: '{identifier}'");
@@ -222,7 +244,9 @@ public static class GroupCommands
         DataContext.Groups.Remove(group);
         DataContext.Groups.Add(updatedGroup);
         DataContext.SaveAll();
-        Console.WriteLine($"Group {updatedGroup.Code} (id={updatedGroup.Id}) updated.");
+        Console.WriteLine(
+            $"Group {updatedGroup.Code} (id={updatedGroup.Id}) updated."
+        );
     }
 
     static void Delete(string identifier)
@@ -242,7 +266,9 @@ public static class GroupCommands
 
         if (group == null)
         {
-            throw new KeyNotFoundException($"Group not found: '{identifier}' (neither ID nor code)");
+            throw new KeyNotFoundException(
+                $"Group not found: '{identifier}' (neither ID nor code)"
+            );
         }
 
         DataContext.Groups.Remove(group);

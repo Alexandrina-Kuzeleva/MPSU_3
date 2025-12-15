@@ -7,7 +7,9 @@ public static class ReportCommands
 {
     public static void Run(string[] args)
     {
-        if (args.Length < 2) throw new ArgumentException("Usage: sched report <group|teacher|room|day> ...");
+        if (args.Length < 2) throw new ArgumentException(
+            "Usage: sched report <group|teacher|room|day> ..."
+        );
 
         var type = args[1].ToLower();
         var format = ArgsParser.GetValue(args, "--format") ?? "text";
@@ -45,7 +47,9 @@ public static class ReportCommands
                 break;
 
             default:
-                throw new ArgumentException($"Unknown report type: {type}. Use group|teacher|room|day");
+                throw new ArgumentException(
+                    $"Unknown report type: {type}. Use group|teacher|room|day"
+                );
         }
     }
 }

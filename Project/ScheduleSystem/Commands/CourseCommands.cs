@@ -8,23 +8,39 @@ public static class CourseCommands
 {
     public static void Run(string[] args)
     {
-        if (args.Length < 2) throw new ArgumentException("Usage: sched course <add|list|show|delete>");
+        if (args.Length < 2) 
+            throw new ArgumentException(
+                "Usage: sched course <add|list|show|delete>"
+            );
 
         var action = args[1].ToLower();
         switch (action)
         {
-            case "add":     Add(args); break;
-            case "list":    List(args); break;
-            case "show":    if (args.Length < 3) throw new ArgumentException("Usage: sched course show <id|code>"); Show(args[2]); break;
+            case "add": Add(args); break;
+            case "list": List(args); break;
+            case "show":    
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched course show <id|code>"
+                    ); 
+                Show(args[2]); 
+                break;
             case "delete":  
-                if (args.Length < 3) throw new ArgumentException("Usage: sched course delete <id|code>");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched course delete <id|code>"
+                    );
                 Delete(args[2]); 
                 break;
             case "update":
-                if (args.Length < 3) throw new ArgumentException("Usage: sched course update <id> [--title new] [--code new] [--duration N]");
+                if (args.Length < 3) 
+                    throw new ArgumentException(
+                        "Usage: sched course update <id>" + 
+                        "[--title new] [--code new] [--duration N]");
                 Update(args[2], args);
                 break;
-            default: throw new ArgumentException($"Unknown course action: {action}");
+            default: 
+                throw new ArgumentException($"Unknown course action: {action}");
         }
     }
 
@@ -38,7 +54,8 @@ public static class CourseCommands
             return;
         }
 
-        var title = ArgsParser.GetValue(args, "--title") ?? throw new ArgumentException("Missing --title");
+        var title = ArgsParser.GetValue(args, "--title") ?? 
+            throw new ArgumentException("Missing --title");
         var code = ArgsParser.GetValue(args, "--code");
         var duration = int.Parse(ArgsParser.GetValue(args, "--duration") ?? "90");
 
@@ -108,15 +125,20 @@ public static class CourseCommands
         var maxDuration = ArgsParser.GetInt(args, "--max-duration");
         var sortBy = ArgsParser.GetValue(args, "--sort") ?? "title";
         var limit = ArgsParser.GetInt(args, "--limit");
-        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || 
+            ArgsParser.HasFlag(args, "--desc");
 
         var query = DataContext.Courses.AsQueryable();
 
         if (!string.IsNullOrEmpty(titleLike))
-            query = query.Where(c => c.Title.Contains(titleLike, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(c => c.Title.Contains(
+                titleLike, StringComparison.OrdinalIgnoreCase
+            ));
         
         if (!string.IsNullOrEmpty(codeLike))
-            query = query.Where(c => c.Code != null && c.Code.Contains(codeLike, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(c => c.Code != null && c.Code.Contains(
+                codeLike, StringComparison.OrdinalIgnoreCase
+            ));
         
         if (minDuration.HasValue)
             query = query.Where(c => c.DurationMinutes >= minDuration.Value);
@@ -146,11 +168,13 @@ public static class CourseCommands
             courses = courses.Take(limit.Value).ToList();
 
         Console.WriteLine($"Found {courses.Count} course(s):");
-        Console.WriteLine("ID  | Title                                   | Code      | Duration");
+        Console.WriteLine($"{ "ID",-5}| { "Title",-40}| { "Code",-10}| {"Duration"}");
         Console.WriteLine(new string('-', 80));
         
         foreach (var c in courses)
-            Console.WriteLine($"{c.Id,3} | {c.Title,-40} | {c.Code ?? "-",-9} | {c.DurationMinutes,8} min");
+            Console.WriteLine(
+                $"{c.Id,3} | {c.Title,-40} | {c.Code ?? "-",-9} | {c.DurationMinutes,8} min"
+            );
     }
 
     static void Show(string identifier)
@@ -170,7 +194,9 @@ public static class CourseCommands
 
         if (course == null)
         {
-            throw new KeyNotFoundException($"Course not found: '{identifier}' (neither ID nor code)");
+            throw new KeyNotFoundException(
+                $"Course not found: '{identifier}' (neither ID nor code)"
+            );
         }
 
         Console.WriteLine($"ID: {course.Id}");
@@ -189,7 +215,9 @@ public static class CourseCommands
         if (course == null && !string.IsNullOrEmpty(identifier))
         {
             course = DataContext.Courses.FirstOrDefault(c => 
-                c.Code != null && c.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+                c.Code != null && c.Code.Equals(
+                    identifier, StringComparison.OrdinalIgnoreCase
+                ));
         }
         if (course == null)
             throw new KeyNotFoundException($"Course not found: '{identifier}'");
@@ -202,13 +230,16 @@ public static class CourseCommands
             Id: course.Id,
             Title: newTitle ?? course.Title,
             Code: newCode ?? course.Code,
-            DurationMinutes: int.TryParse(newDurationStr, out int duration) ? duration : course.DurationMinutes
+            DurationMinutes: int.TryParse(newDurationStr, out int duration) ? 
+                duration : course.DurationMinutes
         );
 
         DataContext.Courses.Remove(course);
         DataContext.Courses.Add(updatedCourse);
         DataContext.SaveAll();
-        Console.WriteLine($"Course \"{updatedCourse.Title}\" (id={updatedCourse.Id}) updated.");
+        Console.WriteLine(
+            $"Course \"{updatedCourse.Title}\" (id={updatedCourse.Id}) updated."
+        );
     }
 
     static void Delete(string identifier)
@@ -228,7 +259,9 @@ public static class CourseCommands
 
         if (course == null)
         {
-            throw new KeyNotFoundException($"Course not found: '{identifier}' (neither ID nor code)");
+            throw new KeyNotFoundException(
+                $"Course not found: '{identifier}' (neither ID nor code)"
+            );
         }
 
         DataContext.Courses.Remove(course);

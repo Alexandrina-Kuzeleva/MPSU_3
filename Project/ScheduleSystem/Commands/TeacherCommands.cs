@@ -17,19 +17,27 @@ public static class TeacherCommands
             case "list":    List(args); break;
             case "show":
                 if (args.Length < 3) 
-                    throw new ArgumentException("Usage: sched teacher show <id>");
+                    throw new ArgumentException(
+                        "Usage: sched teacher show <id>"
+                    );
                 Show(int.Parse(args[2]));
                 break;
             case "delete":
                 if (args.Length < 3) 
-                    throw new ArgumentException("Usage: sched teacher delete <id>");
+                    throw new ArgumentException(
+                        "Usage: sched teacher delete <id>"
+                    );
                 Delete(int.Parse(args[2]));
                 break;
             case "update":
-                if (args.Length < 3) throw new ArgumentException("Usage: sched teacher update <id> [--name new] [--email new]");
+                if (args.Length < 3) throw new ArgumentException(
+                    "Usage: sched teacher update <id> [--name new] [--email new]"
+                );
                 Update(int.Parse(args[2]), args);
                 break;
-            default: throw new ArgumentException($"Unknown teacher action: {action}");
+            default: throw new ArgumentException(
+                $"Unknown teacher action: {action}"
+            );
         }
     }
 
@@ -43,7 +51,8 @@ public static class TeacherCommands
             return;
         }
 
-        var name = ArgsParser.GetValue(args, "--name") ?? throw new ArgumentException("Missing --name");
+        var name = ArgsParser.GetValue(args, "--name") ?? 
+            throw new ArgumentException("Missing --name");
         var email = ArgsParser.GetValue(args, "--email");
 
         var teacher = new Teacher(
@@ -101,15 +110,20 @@ public static class TeacherCommands
         var emailLike = ArgsParser.GetValue(args, "--email-like");
         var sortBy = ArgsParser.GetValue(args, "--sort") ?? "name";
         var limit = ArgsParser.GetInt(args, "--limit");
-        var reverse = ArgsParser.HasFlag(args, "--reverse") || ArgsParser.HasFlag(args, "--desc");
+        var reverse = ArgsParser.HasFlag(args, "--reverse") || 
+            ArgsParser.HasFlag(args, "--desc");
 
         var query = DataContext.Teachers.AsQueryable();
 
         if (!string.IsNullOrEmpty(nameLike))
-            query = query.Where(t => t.Name.Contains(nameLike, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(t => t.Name.Contains(
+                nameLike, StringComparison.OrdinalIgnoreCase
+            ));
         
         if (!string.IsNullOrEmpty(emailLike))
-            query = query.Where(t => t.Email != null && t.Email.Contains(emailLike, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(t => t.Email != null && t.Email.Contains(
+                emailLike, StringComparison.OrdinalIgnoreCase
+            ));
 
         query = sortBy.ToLower() switch
         {
@@ -166,7 +180,9 @@ public static class TeacherCommands
         DataContext.Teachers.Remove(teacher);
         DataContext.Teachers.Add(updatedTeacher);
         DataContext.SaveAll();
-        Console.WriteLine($"Teacher {updatedTeacher.Name} (id={updatedTeacher.Id}) updated.");
+        Console.WriteLine(
+            $"Teacher {updatedTeacher.Name} (id={updatedTeacher.Id}) updated."
+        );
     }
 
     static void Delete(int id)
