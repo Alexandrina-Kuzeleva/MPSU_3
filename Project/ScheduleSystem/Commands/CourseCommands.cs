@@ -189,7 +189,9 @@ public static class CourseCommands
         if (course == null)
         {
             course = DataContext.Courses.FirstOrDefault(c => 
-                c.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+                string.Equals(c.Code, identifier, 
+                StringComparison.OrdinalIgnoreCase)
+            );
         }
 
         if (course == null)
@@ -254,7 +256,9 @@ public static class CourseCommands
         if (course == null)
         {
             course = DataContext.Courses.FirstOrDefault(c => 
-                c.Code.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+                string.Equals(c.Code, identifier, 
+                StringComparison.OrdinalIgnoreCase)
+            );
         }
 
         if (course == null)

@@ -58,3 +58,9 @@
    * `sched report teacher --teacher TEACHER_ID ...`
    * `sched report room --room ROOM_ID ...`
    * `sched report day --date DATE` — расписание на день.
+
+dotnet clean
+dotnet build
+dotnet pack -c Release
+cd nupkg
+dotnet tool install --global sched --version 1.0.0 --add-source .

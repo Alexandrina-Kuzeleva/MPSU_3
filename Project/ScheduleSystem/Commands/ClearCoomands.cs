@@ -28,6 +28,7 @@ public static class ClearCommands
             Console.WriteLine(
                 "All data has been permanently erased with no recovery option!"
             );
+            Console.ResetColor();
         }
         catch (Exception ex)
         {
