@@ -34,6 +34,11 @@ public static class ReportCommands
                 ReportService.PrintRoomReport(roomId, from, to, format);
                 break;
 
+            case "week":
+                var weekGroupId = int.Parse(ArgsParser.GetValue(args, "--group")!);
+                ReportService.PrintGroupWeekReport(weekGroupId, from, to);
+                break;
+
             case "day":
                 var date = DateOnly.Parse(ArgsParser.GetValue(args, "--date")!);
                 ReportService.PrintDayReport(date, format);

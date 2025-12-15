@@ -26,6 +26,14 @@ public static class SessionCommands
 
     static void Add(string[] args)
     {
+        bool hasArgs = args.Any(a => a.StartsWith("--"));
+        
+        if (!hasArgs)
+        {
+            AddInteractive();
+            return;
+        }
+
         var courseId = int.Parse(ArgsParser.GetValue(args, "--course")!);
         var teacherId = int.Parse(ArgsParser.GetValue(args, "--teacher")!);
         var groupId = int.Parse(ArgsParser.GetValue(args, "--group")!);
@@ -34,6 +42,7 @@ public static class SessionCommands
         var startStr = ArgsParser.GetValue(args, "--start") ?? throw new ArgumentException("Missing --start");
         var endStr = ArgsParser.GetValue(args, "--end") ?? throw new ArgumentException("Missing --end");
         var notes = ArgsParser.GetValue(args, "--notes") ?? "";
+        var force = ArgsParser.HasFlag(args, "--force");
 
         var date = DateOnly.Parse(dateStr ?? DateTime.Today.ToString("yyyy-MM-dd"));
         var start = TimeOnly.Parse(startStr);
@@ -44,7 +53,6 @@ public static class SessionCommands
         var dowStr = ArgsParser.GetValue(args, "--dow");
         var fromStr = ArgsParser.GetValue(args, "--from");
         var toStr = ArgsParser.GetValue(args, "--to");
-        var force = ArgsParser.HasFlag(args, "--force");
 
         List<Session> sessionsToAdd;
 
@@ -55,7 +63,7 @@ public static class SessionCommands
             var to = DateOnly.Parse(toStr);
 
             sessionsToAdd = RecurrenceService.GenerateRecurring(
-                courseId, teacherId, groupId, roomId, start, end, dow, from, to, notes,force);
+                courseId, teacherId, groupId, roomId, start, end, dow, from, to, notes, force);
         }
         else
         {
@@ -83,6 +91,148 @@ public static class SessionCommands
 
         DataContext.SaveAll();
         Console.WriteLine($"Session(s) created: {sessionsToAdd.Count} record(s) added.");
+    }
+
+    static void AddInteractive()
+    {
+        Console.WriteLine("=== Create New Session ===");
+        Console.WriteLine("Leave empty to cancel or use default values.");
+        Console.WriteLine();
+        
+        try
+        {
+            Console.WriteLine("Available courses:");
+            foreach (var c in DataContext.Courses.Take(10))
+                Console.WriteLine($"  [{c.Id}] {c.Title} ({c.Code})");
+            if (DataContext.Courses.Count > 10)
+                Console.WriteLine($"  ... and {DataContext.Courses.Count - 10} more");
+            
+            Console.Write($"\nSelect course ID (1-{DataContext.Courses.Count}): ");
+            var courseInput = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(courseInput))
+            {
+                Console.WriteLine("Cancelled.");
+                return;
+            }
+            if (!int.TryParse(courseInput, out int courseId) || !DataContext.Courses.Any(c => c.Id == courseId))
+            {
+                Console.WriteLine("Invalid course ID.");
+                return;
+            }
+            
+            Console.WriteLine("\nAvailable teachers:");
+            foreach (var t in DataContext.Teachers.Take(10))
+                Console.WriteLine($"  [{t.Id}] {t.Name}");
+            if (DataContext.Teachers.Count > 10)
+                Console.WriteLine($"  ... and {DataContext.Teachers.Count - 10} more");
+            
+            Console.Write($"\nSelect teacher ID (1-{DataContext.Teachers.Count}): ");
+            var teacherInput = Console.ReadLine();
+            if (!int.TryParse(teacherInput, out int teacherId) || !DataContext.Teachers.Any(t => t.Id == teacherId))
+            {
+                Console.WriteLine("Invalid teacher ID.");
+                return;
+            }
+            
+            Console.WriteLine("\nAvailable groups:");
+            foreach (var g in DataContext.Groups.Take(10))
+                Console.WriteLine($"  [{g.Id}] {g.Code} ({g.Size} students)");
+            if (DataContext.Groups.Count > 10)
+                Console.WriteLine($"  ... and {DataContext.Groups.Count - 10} more");
+            
+            Console.Write($"\nSelect group ID (1-{DataContext.Groups.Count}): ");
+            var groupInput = Console.ReadLine();
+            if (!int.TryParse(groupInput, out int groupId) || !DataContext.Groups.Any(g => g.Id == groupId))
+            {
+                Console.WriteLine("Invalid group ID.");
+                return;
+            }
+            
+            Console.WriteLine("\nAvailable rooms:");
+            foreach (var r in DataContext.Rooms.Take(10))
+                Console.WriteLine($"  [{r.Id}] {r.Code} ({r.Capacity} seats, {r.Building})");
+            if (DataContext.Rooms.Count > 10)
+                Console.WriteLine($"  ... and {DataContext.Rooms.Count - 10} more");
+            
+            Console.Write($"\nSelect room ID (1-{DataContext.Rooms.Count}): ");
+            var roomInput = Console.ReadLine();
+            if (!int.TryParse(roomInput, out int roomId) || !DataContext.Rooms.Any(r => r.Id == roomId))
+            {
+                Console.WriteLine("Invalid room ID.");
+                return;
+            }
+            
+            Console.Write("\nDate (yyyy-mm-dd) [today]: ");
+            var dateStr = Console.ReadLine();
+            var date = string.IsNullOrWhiteSpace(dateStr) 
+                ? DateOnly.FromDateTime(DateTime.Today) 
+                : DateOnly.Parse(dateStr);
+            
+            Console.Write("Start time (HH:mm) [10:00]: ");
+            var startStr = Console.ReadLine();
+            var start = string.IsNullOrWhiteSpace(startStr) 
+                ? new TimeOnly(10, 0) 
+                : TimeOnly.Parse(startStr);
+            
+            Console.Write("End time (HH:mm) [11:30]: ");
+            var endStr = Console.ReadLine();
+            var end = string.IsNullOrWhiteSpace(endStr) 
+                ? new TimeOnly(11, 30) 
+                : TimeOnly.Parse(endStr);
+            
+            if (start >= end)
+            {
+                Console.WriteLine("Error: Start time must be before end time.");
+                return;
+            }
+            
+            Console.Write("Notes (optional): ");
+            var notes = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(notes)) notes = "";
+            
+            var session = new Session(
+                Id: DataContext.NextId<Session>(),
+                CourseId: courseId,
+                TeacherId: teacherId,
+                GroupId: groupId,
+                RoomId: roomId,
+                Date: date,
+                Start: start,
+                End: end,
+                Notes: notes
+            );
+            
+            var (conflict, msg) = ConflictService.Check(session);
+            if (conflict)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"\n⚠ Warning: Conflict detected: {msg}");
+                Console.ResetColor();
+                
+                Console.Write("Force create anyway? (y/N): ");
+                var forceInput = Console.ReadLine();
+                if (!forceInput?.ToLower().StartsWith("y") ?? true)
+                {
+                    Console.WriteLine("Session creation cancelled.");
+                    return;
+                }
+            }
+            
+            DataContext.Sessions.Add(session);
+            DataContext.SaveAll();
+            
+            Console.WriteLine($"Session created with ID {session.Id}");
+            Console.WriteLine($"   Date: {date:yyyy-MM-dd} ({date.DayOfWeek})");
+            Console.WriteLine($"   Time: {start:HH:mm}-{end:HH:mm}");
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Error: Invalid date or time format.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 
     static void Update(int id, string[] args)
@@ -116,7 +266,7 @@ public static class SessionCommands
             throw new ArgumentException("Start time must be before end time");
 
         var (conflict, msg) = ConflictService.Check(updatedSession);
-        if (conflict && !force) // ← Проверять force
+        if (conflict && !force)
             throw new InvalidOperationException($"Conflict detected: {msg}\nUse --force to update anyway.");
 
         if (conflict && force)

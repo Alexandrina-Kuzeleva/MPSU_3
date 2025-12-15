@@ -35,6 +35,14 @@ public static class TeacherCommands
 
     static void Add(string[] args)
     {
+        bool hasArgs = args.Any(a => a.StartsWith("--"));
+        
+        if (!hasArgs)
+        {
+            AddInteractive();
+            return;
+        }
+
         var name = ArgsParser.GetValue(args, "--name") ?? throw new ArgumentException("Missing --name");
         var email = ArgsParser.GetValue(args, "--email");
 
@@ -48,6 +56,43 @@ public static class TeacherCommands
         DataContext.SaveAll();
 
         Console.WriteLine($"Teacher {teacher.Name} (id={teacher.Id}) created.");
+    }
+
+    static void AddInteractive()
+    {
+        Console.WriteLine("Create New Teacher");
+        Console.WriteLine("Leave empty to cancel.");
+        Console.WriteLine();
+        
+        try
+        {
+            Console.Write("Full name (e.g., Ivanov I.I.): ");
+            var name = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                Console.WriteLine("Cancelled.");
+                return;
+            }
+            
+            Console.Write("Email (optional): ");
+            var email = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(email)) email = null;
+            
+            var teacher = new Teacher(
+                Id: DataContext.NextId<Teacher>(),
+                Name: name,
+                Email: email
+            );
+            
+            DataContext.Teachers.Add(teacher);
+            DataContext.SaveAll();
+            
+            Console.WriteLine($"Teacher '{name}' created with ID {teacher.Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 
     static void List(string[] args)

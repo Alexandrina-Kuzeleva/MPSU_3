@@ -30,6 +30,14 @@ public static class CourseCommands
 
     static void Add(string[] args)
     {
+        bool hasArgs = args.Any(a => a.StartsWith("--"));
+        
+        if (!hasArgs)
+        {
+            AddInteractive();
+            return;
+        }
+
         var title = ArgsParser.GetValue(args, "--title") ?? throw new ArgumentException("Missing --title");
         var code = ArgsParser.GetValue(args, "--code");
         var duration = int.Parse(ArgsParser.GetValue(args, "--duration") ?? "90");
@@ -47,6 +55,51 @@ public static class CourseCommands
         Console.WriteLine($"Course \"{course.Title}\" (id={course.Id}) created.");
     }
 
+    static void AddInteractive()
+    {
+        Console.WriteLine("Create New Course");
+        Console.WriteLine("Leave empty to cancel.");
+        Console.WriteLine();
+        
+        try
+        {
+            Console.Write("Course title (e.g., Algorithms): ");
+            var title = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                Console.WriteLine("Cancelled.");
+                return;
+            }
+            
+            Console.Write("Course code (optional, e.g., CS101): ");
+            var code = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(code)) code = null;
+            
+            Console.Write("Duration in minutes (default: 90): ");
+            var durationStr = Console.ReadLine();
+            if (!int.TryParse(durationStr, out int duration) || duration <= 0)
+            {
+                Console.WriteLine("Invalid duration. Using default: 90");
+                duration = 90;
+            }
+            
+            var course = new Course(
+                Id: DataContext.NextId<Course>(),
+                Title: title,
+                Code: code,
+                DurationMinutes: duration
+            );
+            
+            DataContext.Courses.Add(course);
+            DataContext.SaveAll();
+            
+            Console.WriteLine($"Course '{title}' created with ID {course.Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
     static void List(string[] args)
     {
         var titleLike = ArgsParser.GetValue(args, "--title-like");

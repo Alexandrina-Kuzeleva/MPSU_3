@@ -33,6 +33,14 @@ public static class GroupCommands
 
     static void Add(string[] args)
     {
+        bool hasArgs = args.Any(a => a.StartsWith("--"));
+        
+        if (!hasArgs)
+        {
+            AddInteractive();
+            return;
+        }
+
         var code = ArgsParser.GetValue(args, "--code") ?? throw new ArgumentException("Missing --code");
         var size = int.Parse(ArgsParser.GetValue(args, "--size") ?? "0");
         var year = ArgsParser.GetInt(args, "--year");
@@ -48,6 +56,54 @@ public static class GroupCommands
         DataContext.SaveAll();
 
         Console.WriteLine($"Group {group.Code} (id={group.Id}) created.");
+    }
+
+    static void AddInteractive()
+    {
+        Console.WriteLine("Create New Group");
+        Console.WriteLine("Leave empty to cancel.");
+        Console.WriteLine();
+        
+        try
+        {
+            Console.Write("Group code (e.g., CS-2025): ");
+            var code = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                Console.WriteLine("Cancelled.");
+                return;
+            }
+            
+            Console.Write("Group size: ");
+            var sizeStr = Console.ReadLine();
+            if (!int.TryParse(sizeStr, out int size) || size <= 0)
+            {
+                Console.WriteLine("Invalid size. Using default: 30");
+                size = 30;
+            }
+            
+            Console.Write("Year (optional, e.g., 2025): ");
+            var yearStr = Console.ReadLine();
+            int? year = null;
+            if (!string.IsNullOrWhiteSpace(yearStr) && int.TryParse(yearStr, out int yearVal))
+                year = yearVal;
+            
+            var group = new Group(
+                Id: DataContext.NextId<Group>(),
+                Code: code,
+                Size: size,
+                Year: year
+            );
+            
+            DataContext.Groups.Add(group);
+            DataContext.SaveAll();
+            
+            Console.WriteLine($"Group '{code}' created with ID {group.Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 
     static void List(string[] args)

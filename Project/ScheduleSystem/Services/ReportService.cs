@@ -85,6 +85,50 @@ public static class ReportService
         Console.WriteLine($"Total sessions: {sessions.Count}\n");
     }
 
+    public static void PrintGroupWeekReport(int groupId, DateOnly? from = null, DateOnly? to = null)
+    {
+        var sessions = FilterSessions(s => s.GroupId == groupId, from, to);
+        var groupName = DataContext.Groups.FirstOrDefault(g => g.Id == groupId)?.Code ?? $"Group {groupId}";
+
+        if (!sessions.Any())
+        {
+            Console.WriteLine("No sessions found.");
+            return;
+        }
+
+        Console.WriteLine($"Weekly schedule for group: {groupName}");
+        if (from.HasValue || to.HasValue)
+            Console.WriteLine($"Period: {(from?.ToString("yyyy-MM-dd") ?? "beginning")} – {(to?.ToString("yyyy-MM-dd") ?? "end")}");
+        Console.WriteLine();
+
+        var groupedByDate = sessions
+            .GroupBy(s => s.Date)
+            .OrderBy(g => g.Key);
+
+        foreach (var dayGroup in groupedByDate)
+        {
+            var date = dayGroup.Key;
+            Console.WriteLine($"{date:yyyy-MM-dd} ({date.DayOfWeek}):");
+            
+            var daySessions = dayGroup.OrderBy(s => s.Start).ToList();
+            
+            foreach (var s in daySessions)
+            {
+                var course = DataContext.Courses.FirstOrDefault(c => c.Id == s.CourseId)?.Title ?? "?";
+                var teacher = DataContext.Teachers.FirstOrDefault(t => t.Id == s.TeacherId)?.Name ?? "?";
+                var room = DataContext.Rooms.FirstOrDefault(r => r.Id == s.RoomId)?.Code ?? "?";
+
+                Console.WriteLine($"  {s.TimeRange} - {course}");
+                Console.WriteLine($"    Teacher: {teacher}, Room: {room}");
+                if (!string.IsNullOrEmpty(s.Notes))
+                    Console.WriteLine($"    Notes: {s.Notes}");
+            }
+            Console.WriteLine();
+        }
+
+        Console.WriteLine($"Total sessions: {sessions.Count}");
+    }
+
     private static void ExportToCsv(List<Session> sessions, string filename)
     {
         var lines = new List<string>

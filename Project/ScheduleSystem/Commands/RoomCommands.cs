@@ -33,6 +33,14 @@ public static class RoomCommands
 
     static void Add(string[] args)
     {
+        bool hasArgs = args.Any(a => a.StartsWith("--"));
+        
+        if (!hasArgs)
+        {
+            AddInteractive();
+            return;
+        }
+
         var code = ArgsParser.GetValue(args, "--code") ?? throw new ArgumentException("Missing --code");
         var capacity = int.Parse(ArgsParser.GetValue(args, "--capacity") ?? "0");
         var building = ArgsParser.GetValue(args, "--building");
@@ -48,6 +56,57 @@ public static class RoomCommands
         DataContext.SaveAll();
 
         Console.WriteLine($"Room {room.Code} (id={room.Id}) created.");
+    }
+
+    static void AddInteractive()
+    {
+        Console.WriteLine("Create New Room");
+        Console.WriteLine("Leave empty to cancel.");
+        Console.WriteLine();
+        
+        try
+        {
+            Console.Write("Room code (e.g., A-101): ");
+            var code = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                Console.WriteLine("Cancelled.");
+                return;
+            }
+            
+            Console.Write("Capacity: ");
+            var capacityStr = Console.ReadLine();
+            if (!int.TryParse(capacityStr, out int capacity) || capacity <= 0)
+            {
+                Console.WriteLine("Invalid capacity. Using default: 30");
+                capacity = 30;
+            }
+            
+            Console.Write("Building (optional): ");
+            var building = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(building)) building = null;
+            
+            Console.Write("Attributes JSON (optional): ");
+            var attributes = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(attributes)) attributes = null;
+            
+            var room = new Room(
+                Id: DataContext.NextId<Room>(),
+                Code: code,
+                Capacity: capacity,
+                Building: building,
+                AttributesJson: attributes
+            );
+            
+            DataContext.Rooms.Add(room);
+            DataContext.SaveAll();
+            
+            Console.WriteLine($"Room '{code}' created with ID {room.Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 
     static void List(string[] args)

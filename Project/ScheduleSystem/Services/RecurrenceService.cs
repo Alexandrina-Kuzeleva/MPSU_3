@@ -20,6 +20,8 @@ public static class RecurrenceService
         int daysToAdd = ((int)dayOfWeek - (int)current.DayOfWeek + 7) % 7;
         if (daysToAdd > 0 || current.DayOfWeek != dayOfWeek)
             current = current.AddDays(daysToAdd == 0 ? 7 : daysToAdd);
+        if (start >= end)
+            throw new ArgumentException("Invalid session time range");
 
         while (current <= toDate)
         {

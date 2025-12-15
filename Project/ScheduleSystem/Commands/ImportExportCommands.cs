@@ -44,183 +44,196 @@ public static class ImportExportCommands
             throw new FileNotFoundException($"File not found: {filePath}");
 
         var lines = File.ReadAllLines(filePath);
-        if (lines.Length < 2) return;
 
-        var headers = lines[0].Split(',');
+        int success = 0;
+        int errors = 0;
+
+        if (lines.Length < 2)
+        {
+            Console.WriteLine("CSV import complete. Success: 0, Errors: 0");
+            return;
+        }
+
         var dataLines = lines.Skip(1).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
-
-        int successCount = 0;
-        int errorCount = 0;
 
         switch (entity.ToLower())
         {
             case "sessions":
                 if (mode == "replace") DataContext.Sessions.Clear();
-                
+
                 foreach (var line in dataLines)
                 {
                     try
                     {
-                        var values = ParseCsvLine(line);
-                        if (values.Length < 8) continue;
+                        var v = ParseCsvLine(line);
+                        if (v.Length < 6) throw new Exception("Not enough columns");
+                        if (string.IsNullOrWhiteSpace(v[2])) throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[3])) throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[4])) throw new Exception();
+                        if (string.IsNullOrWhiteSpace(v[5])) throw new Exception();
+
+                        var date = DateOnly.Parse(v[0]);
+                        var time = v[1].Split('-');
+                        if (time.Length != 2) throw new Exception("Invalid time format");
 
                         var session = new Session(
                             Id: DataContext.NextId<Session>(),
-                            CourseId: GetOrCreateCourseId(values[3]),
-                            TeacherId: GetOrCreateTeacherId(values[4]),
-                            GroupId: GetOrCreateGroupId(values[5]),
-                            RoomId: GetOrCreateRoomId(values[6]),
-                            Date: DateOnly.Parse(values[0]),
-                            Start: TimeOnly.Parse(values[1].Split('-')[0]),
-                            End: TimeOnly.Parse(values[1].Split('-')[1]),
-                            Notes: values.Length > 7 ? values[7] : ""
+                            CourseId: GetOrCreateCourseId(v[2]),
+                            TeacherId: GetOrCreateTeacherId(v[3]),
+                            GroupId: GetOrCreateGroupId(v[4]),
+                            RoomId: GetOrCreateRoomId(v[5]),
+                            Date: date,
+                            Start: TimeOnly.Parse(time[0]),
+                            End: TimeOnly.Parse(time[1]),
+                            Notes: v.Length > 6 ? v[6] : ""
                         );
 
-                        var conflictResult = ConflictService.Check(session);
-                        if (!conflictResult.hasConflict || force)
+                        var conflict = ConflictService.Check(session);
+
+                        if (!conflict.hasConflict || force)
                         {
-                            if (conflictResult.hasConflict && force)
+                            if (conflict.hasConflict && force)
                             {
                                 Console.ForegroundColor = ConsoleColor.Yellow;
-                                Console.WriteLine($"⚠ Warning: Importing session with conflict: {conflictResult.message}");
+                                Console.WriteLine($"Warning: {conflict.message}");
                                 Console.ResetColor();
                             }
-                            
+
                             DataContext.Sessions.Add(session);
-                            successCount++;
+                            success++;
                         }
                         else
                         {
-                            errorCount++;
-                            Console.WriteLine($"Skipped line due to conflict: {conflictResult.message}");
+                            errors++;
                         }
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        errorCount++;
-                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                        errors++;
                     }
                 }
                 break;
 
             case "rooms":
                 if (mode == "replace") DataContext.Rooms.Clear();
-                
+
                 foreach (var line in dataLines)
                 {
                     try
                     {
-                        var values = ParseCsvLine(line);
-                        if (values.Length < 2) continue;
+                        var v = ParseCsvLine(line);
+                        if (string.IsNullOrWhiteSpace(v[0])) throw new Exception();
+                        if (!int.TryParse(v[1], out int cap) || cap <= 0) throw new Exception();
+                        if (DataContext.Rooms.Any(r =>
+                            r.Code.Equals(v[0], StringComparison.OrdinalIgnoreCase)))
+                            throw new Exception();
 
-                        var room = new Room(
-                            Id: DataContext.NextId<Room>(),
-                            Code: values[0],
-                            Capacity: int.TryParse(values[1], out int capacity) ? capacity : 0,
-                            Building: values.Length > 2 ? values[2] : null,
-                            AttributesJson: values.Length > 3 ? values[3] : null
-                        );
+                        DataContext.Rooms.Add(new Room(
+                            DataContext.NextId<Room>(),
+                            v[0],
+                            cap,
+                            v.Length > 2 ? v[2] : null
+                        ));
 
-                        DataContext.Rooms.Add(room);
-                        successCount++;
+                        success++;
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        errorCount++;
-                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                        errors++;
                     }
                 }
                 break;
 
             case "teachers":
                 if (mode == "replace") DataContext.Teachers.Clear();
-                
+
                 foreach (var line in dataLines)
                 {
                     try
                     {
-                        var values = ParseCsvLine(line);
-                        if (values.Length < 1) continue;
+                        var v = ParseCsvLine(line);
+                        if (string.IsNullOrWhiteSpace(v[0])) throw new Exception();
 
-                        var teacher = new Teacher(
-                            Id: DataContext.NextId<Teacher>(),
-                            Name: values[0],
-                            Email: values.Length > 1 ? values[1] : null
-                        );
+                        if (v.Length > 1 && !string.IsNullOrEmpty(v[1]) && !v[1].Contains("@"))
+                            throw new Exception();
 
-                        DataContext.Teachers.Add(teacher);
-                        successCount++;
+                        DataContext.Teachers.Add(new Teacher(
+                            DataContext.NextId<Teacher>(),
+                            v[0],
+                            v.Length > 1 ? v[1] : null
+                        ));
+
+                        success++;
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        errorCount++;
-                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                        errors++;
                     }
                 }
                 break;
 
             case "groups":
                 if (mode == "replace") DataContext.Groups.Clear();
-                
+
                 foreach (var line in dataLines)
                 {
                     try
                     {
-                        var values = ParseCsvLine(line);
-                        if (values.Length < 1) continue;
+                        var v = ParseCsvLine(line);
+                        if (string.IsNullOrWhiteSpace(v[0])) throw new Exception();
+                        if (!int.TryParse(v[1], out int size) || size <= 0) throw new Exception();
+                        if (!int.TryParse(v[2], out int year)) throw new Exception();
 
-                        var group = new Group(
-                            Id: DataContext.NextId<Group>(),
-                            Code: values[0],
-                            Size: values.Length > 1 && int.TryParse(values[1], out int size) ? size : 0,
-                            Year: values.Length > 2 && int.TryParse(values[2], out int year) ? year : null
-                        );
+                        DataContext.Groups.Add(new Group(
+                            DataContext.NextId<Group>(),
+                            v[0],
+                            size,
+                            year
+                        ));
 
-                        DataContext.Groups.Add(group);
-                        successCount++;
+                        success++;
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        errorCount++;
-                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                        errors++;
                     }
                 }
                 break;
 
             case "courses":
                 if (mode == "replace") DataContext.Courses.Clear();
-                
+
                 foreach (var line in dataLines)
                 {
                     try
                     {
-                        var values = ParseCsvLine(line);
-                        if (values.Length < 1) continue;
+                        var v = ParseCsvLine(line);
+                        if (string.IsNullOrWhiteSpace(v[0])) throw  new Exception();
+                        if (string.IsNullOrWhiteSpace(v[1])) throw  new Exception();
+                        if (!int.TryParse(v[2], out int dur)) throw  new Exception();
 
-                        var course = new Course(
-                            Id: DataContext.NextId<Course>(),
-                            Title: values[0],
-                            Code: values.Length > 1 ? values[1] : null,
-                            DurationMinutes: values.Length > 2 && int.TryParse(values[2], out int duration) ? duration : 90
-                        );
+                        DataContext.Courses.Add(new Course(
+                            DataContext.NextId<Course>(),
+                            v[0],
+                            v.Length > 1 ? v[1] : null,
+                            dur
+                        ));
 
-                        DataContext.Courses.Add(course);
-                        successCount++;
+                        success++;
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        errorCount++;
-                        Console.WriteLine($"Error parsing line: {ex.Message}");
+                        errors++;
                     }
                 }
                 break;
 
             default:
-                throw new ArgumentException($"Entity {entity} not supported for CSV import");
+                throw new ArgumentException($"Entity {entity} not supported");
         }
 
         DataContext.SaveAll();
-        Console.WriteLine($"CSV import complete. Success: {successCount}, Errors: {errorCount}");
+        Console.WriteLine($"CSV import complete. Success: {success}, Errors: {errors}");
     }
 
     private static void ExportCsv(string[] args)
