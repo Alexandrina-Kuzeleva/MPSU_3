@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "code": "A-101",
+    "capacity": 30,
+    "building": "Main",
+    "attributesJson": null
+  },
+  {
+    "id": 2,
+    "code": "B-201",
+    "capacity": 50,
+    "building": "Secondary",
+    "attributesJson": null
+  },
+  {
+    "id": 3,
+    "code": "C-301",
+    "capacity": 20,
+    "building": "Library",
+    "attributesJson": null
+  },
+  {
+    "id": 4,
+    "code": "D-401",
+    "capacity": 40,
+    "building": "Science",
+    "attributesJson": null
+  },
+  {
+    "id": 5,
+    "code": "E-501",
+    "capacity": 60,
+    "building": "Sports",
+    "attributesJson": null
+  },
+  {
+    "id": 6,
+    "code": "A100",
+    "capacity": 10,
+    "building": "2",
+    "attributesJson": null
+  }
+]

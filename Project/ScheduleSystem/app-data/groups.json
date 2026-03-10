@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "code": "GROUP-1",
+    "size": 21,
+    "year": 2024
+  },
+  {
+    "id": 2,
+    "code": "GROUP-2",
+    "size": 22,
+    "year": 2025
+  },
+  {
+    "id": 3,
+    "code": "GROUP-3",
+    "size": 23,
+    "year": 2023
+  },
+  {
+    "id": 4,
+    "code": "GROUP-4",
+    "size": 24,
+    "year": 2024
+  },
+  {
+    "id": 5,
+    "code": "GROUP-5",
+    "size": 25,
+    "year": 2025
+  },
+  {
+    "id": 6,
+    "code": "GROUP-6",
+    "size": 26,
+    "year": 2023
+  },
+  {
+    "id": 7,
+    "code": "GROUP-7",
+    "size": 27,
+    "year": 2024
+  },
+  {
+    "id": 8,
+    "code": "GROUP-8",
+    "size": 28,
+    "year": 2025
+  },
+  {
+    "id": 9,
+    "code": "GROUP-9",
+    "size": 29,
+    "year": 2023
+  },
+  {
+    "id": 10,
+    "code": "GROUP-10",
+    "size": 30,
+    "year": 2024
+  },
+  {
+    "id": 11,
+    "code": "GROUP-11",
+    "size": 31,
+    "year": 2025
+  },
+  {
+    "id": 12,
+    "code": "GROUP-12",
+    "size": 32,
+    "year": 2023
+  },
+  {
+    "id": 13,
+    "code": "GROUP-13",
+    "size": 33,
+    "year": 2024
+  },
+  {
+    "id": 14,
+    "code": "GROUP-14",
+    "size": 34,
+    "year": 2025
+  },
+  {
+    "id": 15,
+    "code": "GROUP-15",
+    "size": 35,
+    "year": 2023
+  },
+  {
+    "id": 16,
+    "code": "GROUP-16",
+    "size": 36,
+    "year": 2024
+  },
+  {
+    "id": 17,
+    "code": "GROUP-17",
+    "size": 37,
+    "year": 2025
+  },
+  {
+    "id": 18,
+    "code": "GROUP-18",
+    "size": 38,
+    "year": 2023
+  },
+  {
+    "id": 19,
+    "code": "GROUP-19",
+    "size": 39,
+    "year": 2024
+  },
+  {
+    "id": 20,
+    "code": "GROUP-20",
+    "size": 40,
+    "year": 2025
+  }
+]

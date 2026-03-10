@@ -1,0 +1,194 @@
+[
+  {
+    "id": 1,
+    "title": "Course 1",
+    "code": "CRS1",
+    "durationMinutes": 95
+  },
+  {
+    "id": 2,
+    "title": "Course 2",
+    "code": "CRS2",
+    "durationMinutes": 100
+  },
+  {
+    "id": 3,
+    "title": "Course 3",
+    "code": "CRS3",
+    "durationMinutes": 105
+  },
+  {
+    "id": 4,
+    "title": "Course 4",
+    "code": "CRS4",
+    "durationMinutes": 110
+  },
+  {
+    "id": 5,
+    "title": "Course 5",
+    "code": "CRS5",
+    "durationMinutes": 115
+  },
+  {
+    "id": 6,
+    "title": "Course 6",
+    "code": "CRS6",
+    "durationMinutes": 120
+  },
+  {
+    "id": 7,
+    "title": "Course 7",
+    "code": "CRS7",
+    "durationMinutes": 125
+  },
+  {
+    "id": 8,
+    "title": "Course 8",
+    "code": "CRS8",
+    "durationMinutes": 130
+  },
+  {
+    "id": 9,
+    "title": "Course 9",
+    "code": "CRS9",
+    "durationMinutes": 135
+  },
+  {
+    "id": 10,
+    "title": "Course 10",
+    "code": "CRS10",
+    "durationMinutes": 140
+  },
+  {
+    "id": 11,
+    "title": "Course 11",
+    "code": "CRS11",
+    "durationMinutes": 145
+  },
+  {
+    "id": 12,
+    "title": "Course 12",
+    "code": "CRS12",
+    "durationMinutes": 150
+  },
+  {
+    "id": 13,
+    "title": "Course 13",
+    "code": "CRS13",
+    "durationMinutes": 155
+  },
+  {
+    "id": 14,
+    "title": "Course 14",
+    "code": "CRS14",
+    "durationMinutes": 160
+  },
+  {
+    "id": 15,
+    "title": "Course 15",
+    "code": "CRS15",
+    "durationMinutes": 165
+  },
+  {
+    "id": 16,
+    "title": "Course 16",
+    "code": "CRS16",
+    "durationMinutes": 170
+  },
+  {
+    "id": 17,
+    "title": "Course 17",
+    "code": "CRS17",
+    "durationMinutes": 175
+  },
+  {
+    "id": 18,
+    "title": "Course 18",
+    "code": "CRS18",
+    "durationMinutes": 180
+  },
+  {
+    "id": 19,
+    "title": "Course 19",
+    "code": "CRS19",
+    "durationMinutes": 185
+  },
+  {
+    "id": 20,
+    "title": "Course 20",
+    "code": "CRS20",
+    "durationMinutes": 190
+  },
+  {
+    "id": 21,
+    "title": "Course 21",
+    "code": "CRS21",
+    "durationMinutes": 195
+  },
+  {
+    "id": 22,
+    "title": "Course 22",
+    "code": "CRS22",
+    "durationMinutes": 200
+  },
+  {
+    "id": 23,
+    "title": "Course 23",
+    "code": "CRS23",
+    "durationMinutes": 205
+  },
+  {
+    "id": 24,
+    "title": "Course 24",
+    "code": "CRS24",
+    "durationMinutes": 210
+  },
+  {
+    "id": 25,
+    "title": "Course 25",
+    "code": "CRS25",
+    "durationMinutes": 215
+  },
+  {
+    "id": 26,
+    "title": "Course 26",
+    "code": "CRS26",
+    "durationMinutes": 220
+  },
+  {
+    "id": 27,
+    "title": "Course 27",
+    "code": "CRS27",
+    "durationMinutes": 225
+  },
+  {
+    "id": 28,
+    "title": "Course 28",
+    "code": "CRS28",
+    "durationMinutes": 230
+  },
+  {
+    "id": 29,
+    "title": "Course 29",
+    "code": "CRS29",
+    "durationMinutes": 235
+  },
+  {
+    "id": 30,
+    "title": "Course 30",
+    "code": "CRS30",
+    "durationMinutes": 240
+  },
+  {
+    "id": 31,
+    "title": "Algorithms",
+    "code": "",
+    "durationMinutes": 90
+  },
+  {
+    "id": 32,
+    "title": "Physics",
+    "code": "",
+    "durationMinutes": 90
+  }
+]

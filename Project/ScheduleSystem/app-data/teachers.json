@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "Teacher 1",
+    "email": "teacher1@univ.edu"
+  },
+  {
+    "id": 2,
+    "name": "Teacher 2",
+    "email": "teacher2@univ.edu"
+  },
+  {
+    "id": 3,
+    "name": "Teacher 3",
+    "email": "teacher3@univ.edu"
+  },
+  {
+    "id": 4,
+    "name": "Teacher 4",
+    "email": "teacher4@univ.edu"
+  },
+  {
+    "id": 5,
+    "name": "Teacher 5",
+    "email": "teacher5@univ.edu"
+  },
+  {
+    "id": 6,
+    "name": "Teacher 6",
+    "email": "teacher6@univ.edu"
+  },
+  {
+    "id": 7,
+    "name": "Teacher 7",
+    "email": "teacher7@univ.edu"
+  },
+  {
+    "id": 8,
+    "name": "Teacher 8",
+    "email": "teacher8@univ.edu"
+  },
+  {
+    "id": 9,
+    "name": "Teacher 9",
+    "email": "teacher9@univ.edu"
+  },
+  {
+    "id": 10,
+    "name": "Teacher 10",
+    "email": "teacher10@univ.edu"
+  }
+]
